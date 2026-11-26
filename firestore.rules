@@ -1,0 +1,431 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Primitives ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'mfathoya1@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Validation Blueprints ---
+    function isValidUserPublic(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'activeLoanCount', 'totalBorrowedCount', 'joinedAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'role', 'activeLoanCount', 'totalBorrowedCount', 'joinedAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.role in ['admin', 'member']
+        && data.activeLoanCount is int && data.activeLoanCount >= 0 && data.activeLoanCount <= 100
+        && data.totalBorrowedCount is int && data.totalBorrowedCount >= 0 && data.totalBorrowedCount <= 100000
+        && data.joinedAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivate(data) {
+      return data.keys().hasAll(['uid', 'email', 'memberCode', 'emailRemindersEnabled', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'memberCode', 'emailRemindersEnabled', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.memberCode is string && data.memberCode.size() >= 3 && data.memberCode.size() <= 32
+        && data.emailRemindersEnabled is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.keys().hasOnly(['email', 'createdAt'])
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.createdAt is timestamp;
+    }
+
+    function isValidBook(data) {
+      return data.keys().hasAll([
+          'id', 'title', 'author', 'isbn', 'category', 'publisher', 'year',
+          'synopsis', 'coverUrl', 'format', 'shelfLocation', 'totalCopies',
+          'availableCopies', 'borrowCount', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'title', 'author', 'isbn', 'category', 'publisher', 'year',
+          'synopsis', 'coverUrl', 'format', 'shelfLocation', 'totalCopies',
+          'availableCopies', 'borrowCount', 'lastLoanId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.author is string && data.author.size() >= 1 && data.author.size() <= 140
+        && data.isbn is string && data.isbn.size() >= 5 && data.isbn.size() <= 40
+        && data.category in ['Teknologi', 'Sastra', 'Sains', 'Sejarah', 'Bisnis', 'Desain']
+        && data.publisher is string && data.publisher.size() >= 1 && data.publisher.size() <= 120
+        && data.year is int && data.year >= 1400 && data.year <= 2100
+        && data.synopsis is string && data.synopsis.size() >= 1 && data.synopsis.size() <= 1200
+        && data.coverUrl is string && data.coverUrl.size() <= 400
+        && data.format in ['Cetak & Digital', 'E-Book', 'Cetak']
+        && data.shelfLocation is string && data.shelfLocation.size() >= 1 && data.shelfLocation.size() <= 60
+        && data.totalCopies is int && data.totalCopies >= 1 && data.totalCopies <= 500
+        && data.availableCopies is int && data.availableCopies >= 0 && data.availableCopies <= data.totalCopies
+        && data.borrowCount is int && data.borrowCount >= 0 && data.borrowCount <= 1000000
+        && (!('lastLoanId' in data) || isValidId(data.lastLoanId))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLoan(data) {
+      return data.keys().hasAll([
+          'id', 'bookId', 'bookTitle', 'bookIsbn', 'bookCategory',
+          'memberId', 'memberName', 'memberEmail', 'status',
+          'borrowedAt', 'dueDate', 'renewalCount', 'reminderSentCount', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'bookId', 'bookTitle', 'bookIsbn', 'bookCategory',
+          'memberId', 'memberName', 'memberEmail', 'status',
+          'borrowedAt', 'dueDate', 'returnedAt', 'renewalCount',
+          'reminderSentCount', 'lastReminderAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.bookId)
+        && data.bookTitle is string && data.bookTitle.size() >= 1 && data.bookTitle.size() <= 200
+        && data.bookIsbn is string && data.bookIsbn.size() >= 5 && data.bookIsbn.size() <= 40
+        && data.bookCategory is string && data.bookCategory.size() >= 1 && data.bookCategory.size() <= 60
+        && isValidId(data.memberId)
+        && data.memberName is string && data.memberName.size() >= 1 && data.memberName.size() <= 100
+        && data.memberEmail is string && data.memberEmail.size() >= 3 && data.memberEmail.size() <= 200
+        && data.status in ['borrowed', 'returned', 'overdue']
+        && data.borrowedAt is timestamp
+        && data.dueDate is timestamp
+        && (!('returnedAt' in data) || data.returnedAt is timestamp)
+        && data.renewalCount is int && data.renewalCount >= 0 && data.renewalCount <= 2
+        && data.reminderSentCount is int && data.reminderSentCount >= 0 && data.reminderSentCount <= 100
+        && (!('lastReminderAt' in data) || data.lastReminderAt is timestamp)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidActivity(data) {
+      return data.keys().hasAll(['actorId', 'actorName', 'actionType', 'bookId', 'bookTitle', 'description', 'createdAt'])
+        && data.keys().hasOnly(['actorId', 'actorName', 'actionType', 'bookId', 'bookTitle', 'description', 'createdAt'])
+        && isValidId(data.actorId)
+        && data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 100
+        && data.actionType in ['borrow', 'return', 'renew', 'reminder', 'collection_add', 'collection_update', 'report']
+        && data.bookId is string && data.bookId.size() <= 128
+        && data.bookTitle is string && data.bookTitle.size() >= 1 && data.bookTitle.size() <= 200
+        && data.description is string && data.description.size() >= 1 && data.description.size() <= 300
+        && data.createdAt is timestamp;
+    }
+
+    function isValidEmailNotification(data) {
+      return data.keys().hasAll([
+          'loanId', 'recipientId', 'recipientName', 'recipientEmail',
+          'bookTitle', 'dueDate', 'subject', 'bodyPreview',
+          'deliveryMode', 'status', 'triggerType', 'sentAt'
+        ])
+        && data.keys().hasOnly([
+          'loanId', 'recipientId', 'recipientName', 'recipientEmail',
+          'bookTitle', 'dueDate', 'subject', 'bodyPreview',
+          'deliveryMode', 'status', 'triggerType', 'sentAt'
+        ])
+        && isValidId(data.loanId)
+        && isValidId(data.recipientId)
+        && data.recipientName is string && data.recipientName.size() >= 1 && data.recipientName.size() <= 100
+        && data.recipientEmail is string && data.recipientEmail.size() >= 3 && data.recipientEmail.size() <= 200
+        && data.bookTitle is string && data.bookTitle.size() >= 1 && data.bookTitle.size() <= 200
+        && data.dueDate is timestamp
+        && data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 200
+        && data.bodyPreview is string && data.bodyPreview.size() >= 1 && data.bodyPreview.size() <= 1500
+        && data.deliveryMode in ['smtp', 'simulated']
+        && data.status in ['sent', 'simulated', 'failed']
+        && data.triggerType in ['manual', 'auto_realtime']
+        && data.sentAt is timestamp;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll([
+          'title', 'period', 'generatedBy', 'generatedByName',
+          'totalBooks', 'totalCopies', 'activeLoans', 'overdueLoans',
+          'returnedLoans', 'remindersSent', 'topCategory', 'summaryText', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'period', 'generatedBy', 'generatedByName',
+          'totalBooks', 'totalCopies', 'activeLoans', 'overdueLoans',
+          'returnedLoans', 'remindersSent', 'topCategory', 'summaryText', 'createdAt'
+        ])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.period in ['harian', 'mingguan', 'bulanan', 'keterlambatan']
+        && isValidId(data.generatedBy)
+        && data.generatedByName is string && data.generatedByName.size() >= 1 && data.generatedByName.size() <= 100
+        && data.totalBooks is int && data.totalBooks >= 0
+        && data.totalCopies is int && data.totalCopies >= 0
+        && data.activeLoans is int && data.activeLoans >= 0
+        && data.overdueLoans is int && data.overdueLoans >= 0
+        && data.returnedLoans is int && data.returnedLoans >= 0
+        && data.remindersSent is int && data.remindersSent >= 0
+        && data.topCategory is string && data.topCategory.size() >= 1 && data.topCategory.size() <= 60
+        && data.summaryText is string && data.summaryText.size() >= 1 && data.summaryText.size() <= 1000
+        && data.createdAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // Public profiles (no PII)
+    match /usersPublic/{userId} {
+      allow get: if isValidId(userId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUserPublic(incoming())
+        && isOwner(userId)
+        && incoming().uid == userId
+        && incoming().activeLoanCount == 0
+        && incoming().totalBorrowedCount == 0
+        && incoming().joinedAt == request.time
+        && incoming().updatedAt == request.time
+        && (incoming().role == 'member' || isAdmin());
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUserPublic(incoming())
+        && incoming().uid == existing().uid
+        && incoming().joinedAt == existing().joinedAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            isOwner(userId)
+            && incoming().role == existing().role
+            && (
+              (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt'])) ||
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['activeLoanCount', 'totalBorrowedCount', 'updatedAt'])
+                && (
+                  (incoming().activeLoanCount == existing().activeLoanCount + 1 && incoming().totalBorrowedCount == existing().totalBorrowedCount + 1) ||
+                  (incoming().activeLoanCount == existing().activeLoanCount - 1 && incoming().totalBorrowedCount == existing().totalBorrowedCount)
+                )
+              )
+            )
+          )
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Private PII (isolated to owner or admin)
+    match /usersPrivate/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUserPrivate(incoming())
+        && isOwner(userId)
+        && incoming().uid == userId
+        && incoming().email == request.auth.token.email
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUserPrivate(incoming())
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().memberCode == existing().memberCode
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['emailRemindersEnabled', 'updatedAt']))
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Admins table
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId)
+        && isAdmin()
+        && isValidAdminRecord(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if isValidId(userId)
+        && isAdmin()
+        && isValidAdminRecord(incoming())
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Books catalog
+    match /books/{bookId} {
+      allow get: if isValidId(bookId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(bookId)
+        && isAdmin()
+        && isValidBook(incoming())
+        && incoming().id == bookId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(bookId)
+        && isVerifiedUser()
+        && isValidBook(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            // Member atomic borrow action verified with getAfter()
+            incoming().diff(existing()).affectedKeys().hasOnly(['availableCopies', 'borrowCount', 'lastLoanId', 'updatedAt'])
+            && 'lastLoanId' in incoming()
+            && incoming().availableCopies == existing().availableCopies - 1
+            && incoming().borrowCount == existing().borrowCount + 1
+            && getAfter(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.memberId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.bookId == bookId
+            && getAfter(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.status == 'borrowed'
+          ) ||
+          (
+            // Member atomic return action verified with getAfter()
+            incoming().diff(existing()).affectedKeys().hasOnly(['availableCopies', 'lastLoanId', 'updatedAt'])
+            && 'lastLoanId' in incoming()
+            && incoming().availableCopies == existing().availableCopies + 1
+            && get(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.memberId == request.auth.uid
+            && get(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.bookId == bookId
+            && get(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.status in ['borrowed', 'overdue']
+            && getAfter(/databases/$(database)/documents/loans/$(incoming().lastLoanId)).data.status == 'returned'
+          )
+        );
+      allow delete: if isValidId(bookId) && isAdmin();
+    }
+
+    // Loans (contains memberEmail PII -> isolated to loan owner or admin)
+    match /loans/{loanId} {
+      allow get: if isValidId(loanId) && (isAdmin() || (isSignedIn() && resource.data.memberId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.memberId == request.auth.uid);
+      allow create: if isValidId(loanId)
+        && isVerifiedUser()
+        && isValidLoan(incoming())
+        && incoming().id == loanId
+        && incoming().borrowedAt == request.time
+        && incoming().updatedAt == request.time
+        && incoming().renewalCount == 0
+        && incoming().reminderSentCount == 0
+        && !('returnedAt' in incoming())
+        && exists(/databases/$(database)/documents/books/$(incoming().bookId))
+        && (
+          isAdmin() ||
+          (
+            incoming().memberId == request.auth.uid
+            && incoming().memberEmail == request.auth.token.email
+            && incoming().status == 'borrowed'
+            && incoming().dueDate > request.time
+            && incoming().dueDate <= request.time + duration.value(31, 'd')
+          )
+        );
+      allow update: if isValidId(loanId)
+        && isVerifiedUser()
+        && isValidLoan(incoming())
+        && incoming().id == existing().id
+        && incoming().bookId == existing().bookId
+        && incoming().memberId == existing().memberId
+        && incoming().memberEmail == existing().memberEmail
+        && incoming().borrowedAt == existing().borrowedAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().memberId == request.auth.uid
+            && existing().status != 'returned'
+            && (
+              // Action: Return book
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'returnedAt', 'updatedAt'])
+                && incoming().status == 'returned'
+                && incoming().returnedAt == request.time
+              ) ||
+              // Action: Renew loan (+3 to 7 days, max 2 renewals)
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['dueDate', 'renewalCount', 'updatedAt'])
+                && existing().status == 'borrowed'
+                && incoming().renewalCount == existing().renewalCount + 1
+                && incoming().dueDate > existing().dueDate
+                && incoming().dueDate <= existing().dueDate + duration.value(7, 'd')
+              ) ||
+              // Action: Auto due-date reminder tracking
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['reminderSentCount', 'lastReminderAt', 'updatedAt'])
+                && incoming().reminderSentCount == existing().reminderSentCount + 1
+                && incoming().lastReminderAt == request.time
+              )
+            )
+          )
+        );
+      allow delete: if isValidId(loanId) && isAdmin();
+    }
+
+    // Real-time circulation activities (no PII)
+    match /activities/{activityId} {
+      allow get: if isValidId(activityId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(activityId)
+        && isVerifiedUser()
+        && isValidActivity(incoming())
+        && incoming().createdAt == request.time
+        && (isAdmin() || incoming().actorId == request.auth.uid);
+      allow update: if false;
+      allow delete: if isValidId(activityId) && isAdmin();
+    }
+
+    // Email notifications log (contains recipientEmail PII -> owner or admin only)
+    match /emailNotifications/{notificationId} {
+      allow get: if isValidId(notificationId) && (isAdmin() || (isSignedIn() && resource.data.recipientId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.recipientId == request.auth.uid);
+      allow create: if isValidId(notificationId)
+        && isVerifiedUser()
+        && isValidEmailNotification(incoming())
+        && incoming().sentAt == request.time
+        && (
+          isAdmin() ||
+          (
+            incoming().recipientId == request.auth.uid
+            && incoming().recipientEmail == request.auth.token.email
+            && incoming().triggerType == 'auto_realtime'
+          )
+        );
+      allow update: if false;
+      allow delete: if isValidId(notificationId) && isAdmin();
+    }
+
+    // Automated reports (Admin only)
+    match /reports/{reportId} {
+      allow get: if isValidId(reportId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(reportId)
+        && isAdmin()
+        && isValidReport(incoming())
+        && incoming().generatedBy == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(reportId) && isAdmin();
+    }
+  }
+}

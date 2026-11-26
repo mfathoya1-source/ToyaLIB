@@ -1,0 +1,513 @@
+{
+  "entities": {
+    "UserPublic": {
+      "title": "UserPublic",
+      "description": "Public profile and circulation counters for a library user (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "member"]
+        },
+        "activeLoanCount": {
+          "type": "integer"
+        },
+        "totalBorrowedCount": {
+          "type": "integer"
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "role", "activeLoanCount", "totalBorrowedCount", "joinedAt", "updatedAt"]
+    },
+    "UserPrivate": {
+      "title": "UserPrivate",
+      "description": "Private PII and notification preferences isolated to owner and admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "memberCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32
+        },
+        "emailRemindersEnabled": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "memberCode", "emailRemindersEnabled", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authoritative lookup document for library administrators.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Library catalog book item with stock and metadata.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "isbn": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Teknologi", "Sastra", "Sains", "Sejarah", "Bisnis", "Desain"]
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "year": {
+          "type": "integer"
+        },
+        "synopsis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "coverUrl": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "format": {
+          "type": "string",
+          "enum": ["Cetak & Digital", "E-Book", "Cetak"]
+        },
+        "shelfLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "totalCopies": {
+          "type": "integer"
+        },
+        "availableCopies": {
+          "type": "integer"
+        },
+        "borrowCount": {
+          "type": "integer"
+        },
+        "lastLoanId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "author",
+        "isbn",
+        "category",
+        "publisher",
+        "year",
+        "synopsis",
+        "coverUrl",
+        "format",
+        "shelfLocation",
+        "totalCopies",
+        "availableCopies",
+        "borrowCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Loan": {
+      "title": "Loan",
+      "description": "Book borrowing transaction record with due date and reminder tracking.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "bookId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "bookTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bookIsbn": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "bookCategory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "memberId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "memberName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "memberEmail": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["borrowed", "returned", "overdue"]
+        },
+        "borrowedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "returnedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "renewalCount": {
+          "type": "integer"
+        },
+        "reminderSentCount": {
+          "type": "integer"
+        },
+        "lastReminderAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "bookId",
+        "bookTitle",
+        "bookIsbn",
+        "bookCategory",
+        "memberId",
+        "memberName",
+        "memberEmail",
+        "status",
+        "borrowedAt",
+        "dueDate",
+        "renewalCount",
+        "reminderSentCount",
+        "updatedAt"
+      ]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Real-time non-PII circulation activity stream.",
+      "type": "object",
+      "properties": {
+        "actorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "actorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "actionType": {
+          "type": "string",
+          "enum": ["borrow", "return", "renew", "reminder", "collection_add", "collection_update", "report"]
+        },
+        "bookId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "bookTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["actorId", "actorName", "actionType", "bookId", "bookTitle", "description", "createdAt"]
+    },
+    "EmailNotification": {
+      "title": "EmailNotification",
+      "description": "Real-time email due-date reminder dispatch log (isolated to recipient and admin).",
+      "type": "object",
+      "properties": {
+        "loanId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "recipientId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "recipientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "recipientEmail": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "bookTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bodyPreview": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "deliveryMode": {
+          "type": "string",
+          "enum": ["smtp", "simulated"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["sent", "simulated", "failed"]
+        },
+        "triggerType": {
+          "type": "string",
+          "enum": ["manual", "auto_realtime"]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "loanId",
+        "recipientId",
+        "recipientName",
+        "recipientEmail",
+        "bookTitle",
+        "dueDate",
+        "subject",
+        "bodyPreview",
+        "deliveryMode",
+        "status",
+        "triggerType",
+        "sentAt"
+      ]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Automated circulation and overdue summary report.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "period": {
+          "type": "string",
+          "enum": ["harian", "mingguan", "bulanan", "keterlambatan"]
+        },
+        "generatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "generatedByName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "totalBooks": {
+          "type": "integer"
+        },
+        "totalCopies": {
+          "type": "integer"
+        },
+        "activeLoans": {
+          "type": "integer"
+        },
+        "overdueLoans": {
+          "type": "integer"
+        },
+        "returnedLoans": {
+          "type": "integer"
+        },
+        "remindersSent": {
+          "type": "integer"
+        },
+        "topCategory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "summaryText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "title",
+        "period",
+        "generatedBy",
+        "generatedByName",
+        "totalBooks",
+        "totalCopies",
+        "activeLoans",
+        "overdueLoans",
+        "returnedLoans",
+        "remindersSent",
+        "topCategory",
+        "summaryText",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/usersPublic/{userId}": {
+      "schema": { "$ref": "#/entities/UserPublic" },
+      "description": "Public library member profiles and circulation counts."
+    },
+    "/usersPrivate/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivate" },
+      "description": "Private PII (email, memberCode, reminder preference) for each user."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Authoritative admin role documents."
+    },
+    "/books/{bookId}": {
+      "schema": { "$ref": "#/entities/Book" },
+      "description": "Digital and physical book collection catalog."
+    },
+    "/loans/{loanId}": {
+      "schema": { "$ref": "#/entities/Loan" },
+      "description": "Active and historical book borrowing transactions."
+    },
+    "/activities/{activityId}": {
+      "schema": { "$ref": "#/entities/Activity" },
+      "description": "Real-time non-PII circulation activity feed."
+    },
+    "/emailNotifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/EmailNotification" },
+      "description": "Email reminder dispatch logs isolated by recipient and admin."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "Automated library circulation reports generated by admins."
+    }
+  }
+}
