@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BellRing,
   CheckCircle2,
@@ -28,6 +28,7 @@ interface LoansAndRemindersViewProps {
   actorName: string;
   actorEmail: string;
   smtpConfigured: boolean;
+  externalSearch?: string;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -42,14 +43,21 @@ export function LoansAndRemindersView({
   actorName,
   actorEmail,
   smtpConfigured,
+  externalSearch = '',
   onNotify,
 }: LoansAndRemindersViewProps) {
   const [filter, setFilter] = useState<LoanFilter>('semua');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(externalSearch);
   const [busyLoanId, setBusyLoanId] = useState<string | null>(null);
   const [bulkSending, setBulkSending] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [expandedMailId, setExpandedMailId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (externalSearch !== undefined) {
+      setSearch(externalSearch);
+    }
+  }, [externalSearch]);
 
   const dueSoonOrOverdueLoans = useMemo(() => {
     return loans.filter((l) => {

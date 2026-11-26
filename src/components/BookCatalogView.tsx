@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Calendar, CheckCircle2, Search, X } from 'lucide-react';
 import { borrowBook } from '../services/libraryService';
 import {
@@ -15,6 +15,7 @@ interface BookCatalogViewProps {
   userId: string;
   userName: string;
   userEmail: string;
+  externalSearch?: string;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -24,14 +25,21 @@ export function BookCatalogView({
   userId,
   userName,
   userEmail,
+  externalSearch = '',
   onNotify,
 }: BookCatalogViewProps) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(externalSearch);
   const [category, setCategory] = useState<'Semua' | BookCategory>('Semua');
   const [availabilityFilter, setAvailabilityFilter] = useState<'semua' | 'tersedia'>('semua');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [durationDays, setDurationDays] = useState<number>(7);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (externalSearch !== undefined) {
+      setSearch(externalSearch);
+    }
+  }, [externalSearch]);
 
   const activeBorrowedBookIds = useMemo(() => {
     return new Set(

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Database, Edit3, Plus, Search, Trash2, X } from 'lucide-react';
 import {
   addBook,
@@ -19,6 +19,7 @@ interface CollectionManagerViewProps {
   books: Book[];
   actorId: string;
   actorName: string;
+  externalSearch?: string;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -41,15 +42,22 @@ export function CollectionManagerView({
   books,
   actorId,
   actorName,
+  externalSearch = '',
   onNotify,
 }: CollectionManagerViewProps) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(externalSearch);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [form, setForm] = useState<BookFormInput>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (externalSearch !== undefined) {
+      setSearch(externalSearch);
+    }
+  }, [externalSearch]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

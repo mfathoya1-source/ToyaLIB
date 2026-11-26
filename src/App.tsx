@@ -23,6 +23,7 @@ import {
   Library,
   LogOut,
   Menu,
+  Search,
   ShieldCheck,
   UserCircle2,
   X,
@@ -90,7 +91,12 @@ function PustakaNusaApp() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [smtpConfigured, setSmtpConfigured] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [landingSearch, setLandingSearch] = useState('');
 
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
   const autoReminderAttemptedRef = useRef<Set<string>>(new Set());
 
@@ -111,6 +117,35 @@ function PustakaNusaApp() {
       .catch(() => {
         setSmtpConfigured(false);
       });
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setSearchFocused(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'Escape') {
+        setSearchFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -383,6 +418,30 @@ function PustakaNusaApp() {
     return notifications.filter((n) => n.recipientId === user.uid);
   }, [notifications, user]);
 
+  const globalMatches = useMemo(() => {
+    const q = globalSearch.trim().toLowerCase();
+    if (!q) return { books: [] as Book[], loans: [] as Loan[] };
+    const matchedBooks = books
+      .filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q) ||
+          b.isbn.toLowerCase().includes(q) ||
+          b.category.toLowerCase().includes(q)
+      )
+      .slice(0, 4);
+    const scopedLoans = effectiveAdminView ? loans : userLoans;
+    const matchedLoans = scopedLoans
+      .filter(
+        (l) =>
+          l.bookTitle.toLowerCase().includes(q) ||
+          l.memberName.toLowerCase().includes(q) ||
+          l.memberEmail.toLowerCase().includes(q)
+      )
+      .slice(0, 3);
+    return { books: matchedBooks, loans: matchedLoans };
+  }, [globalSearch, books, loans, userLoans, effectiveAdminView]);
+
   async function handleSignIn() {
     setSigningIn(true);
     try {
@@ -409,7 +468,18 @@ function PustakaNusaApp() {
 
   // Unauthenticated Landing Gate
   if (!user) {
-    const previewCovers = SEED_BOOKS.slice(0, 4);
+    const qLanding = landingSearch.trim().toLowerCase();
+    const previewCovers = (
+      qLanding
+        ? SEED_BOOKS.filter(
+            (b) =>
+              b.title.toLowerCase().includes(qLanding) ||
+              b.author.toLowerCase().includes(qLanding) ||
+              b.category.toLowerCase().includes(qLanding) ||
+              b.isbn.toLowerCase().includes(qLanding)
+          )
+        : SEED_BOOKS
+    ).slice(0, 4);
 
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -504,29 +574,63 @@ function PustakaNusaApp() {
               </div>
             </div>
 
-            <div id="koleksi" className="lg:col-span-6 grid grid-cols-2 gap-4">
-              {previewCovers.map((book) => (
-                <div
-                  key={book.id}
-                  className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col"
-                >
-                  <BookCover
-                    title={book.title}
-                    author={book.author}
-                    category={book.category}
-                    coverUrl={book.coverUrl}
-                    className="aspect-[3/4] w-full"
-                  />
-                  <div className="p-3">
-                    <p className="text-[11px] text-slate-500">
-                      {book.category} · {book.format}
-                    </p>
-                    <p className="text-xs font-semibold text-slate-900 truncate mt-0.5">
-                      {book.title}
-                    </p>
-                  </div>
+            <div id="koleksi" className="lg:col-span-6 flex flex-col gap-4">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={landingSearch}
+                  onChange={(e) => setLandingSearch(e.target.value)}
+                  placeholder="Cari koleksi buku, penulis, atau kategori..."
+                  className="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-700/20 focus:border-blue-700"
+                />
+                {landingSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setLandingSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    aria-label="Hapus pencarian"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {previewCovers.length === 0 ? (
+                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+                  <p className="text-sm font-medium text-slate-900">
+                    Koleksi tidak ditemukan
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Coba kata kunci lain seperti Teknologi, Sastra, Sains, atau Sejarah.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {previewCovers.map((book) => (
+                    <div
+                      key={book.id}
+                      className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col"
+                    >
+                      <BookCover
+                        title={book.title}
+                        author={book.author}
+                        category={book.category}
+                        coverUrl={book.coverUrl}
+                        className="aspect-[3/4] w-full"
+                      />
+                      <div className="p-3">
+                        <p className="text-[11px] text-slate-500">
+                          {book.category} · {book.format}
+                        </p>
+                        <p className="text-xs font-semibold text-slate-900 truncate mt-0.5">
+                          {book.title}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -749,8 +853,8 @@ function PustakaNusaApp() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-4 no-print">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-6 no-print">
+          <div className="flex items-center gap-3 min-w-0 shrink-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -770,11 +874,117 @@ function PustakaNusaApp() {
             </div>
           </div>
 
+          <div ref={searchContainerRef} className="relative flex-1 max-w-md hidden sm:block">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={globalSearch}
+              onFocus={() => setSearchFocused(true)}
+              onChange={(e) => {
+                setGlobalSearch(e.target.value);
+                setSearchFocused(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && globalSearch.trim()) {
+                  setActiveTab('catalog');
+                  setSearchFocused(false);
+                }
+              }}
+              placeholder="Cari buku, penulis, ISBN, atau transaksi... (/)"
+              className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-700/20 focus:border-blue-700 transition-colors"
+            />
+            {globalSearch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setGlobalSearch('');
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                aria-label="Hapus pencarian"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {searchFocused && globalSearch.trim().length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-40 overflow-hidden">
+                {globalMatches.books.length === 0 && globalMatches.loans.length === 0 ? (
+                  <div className="p-4 text-xs text-slate-500 text-center">
+                    Tidak ada hasil untuk "{globalSearch}"
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                    {globalMatches.books.length > 0 && (
+                      <div className="p-2">
+                        <p className="px-2 py-1 text-[11px] font-medium text-slate-400">
+                          Koleksi Buku
+                        </p>
+                        {globalMatches.books.map((book) => (
+                          <button
+                            key={book.id}
+                            type="button"
+                            onClick={() => {
+                              setGlobalSearch(book.title);
+                              setActiveTab('catalog');
+                              setSearchFocused(false);
+                            }}
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 flex items-center justify-between gap-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-slate-900 truncate">
+                                {book.title}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate">
+                                {book.author} · {book.category}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-mono-num text-emerald-700 shrink-0">
+                              {book.availableCopies}/{book.totalCopies}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {globalMatches.loans.length > 0 && (
+                      <div className="p-2">
+                        <p className="px-2 py-1 text-[11px] font-medium text-slate-400">
+                          Transaksi Peminjaman
+                        </p>
+                        {globalMatches.loans.map((loan) => (
+                          <button
+                            key={loan.id}
+                            type="button"
+                            onClick={() => {
+                              setGlobalSearch(loan.bookTitle);
+                              setActiveTab('loans');
+                              setSearchFocused(false);
+                            }}
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 flex items-center justify-between gap-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-slate-900 truncate">
+                                {loan.bookTitle}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate">
+                                {loan.memberName} · {loan.status === 'returned' ? 'Dikembalikan' : 'Aktif'}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
-            onClick={() =>
-              setActiveTab(effectiveAdminView && activeTab !== 'catalog' ? 'catalog' : 'catalog')
-            }
+            onClick={() => setActiveTab('catalog')}
             className="px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap shrink-0"
           >
             Pinjam Buku Online
@@ -837,6 +1047,7 @@ function PustakaNusaApp() {
               userId={user.uid}
               userName={displayName}
               userEmail={displayEmail}
+              externalSearch={globalSearch}
               onNotify={notify}
             />
           )}
@@ -846,6 +1057,7 @@ function PustakaNusaApp() {
               books={books}
               actorId={user.uid}
               actorName={displayName}
+              externalSearch={globalSearch}
               onNotify={notify}
             />
           )}
@@ -860,6 +1072,7 @@ function PustakaNusaApp() {
               actorName={displayName}
               actorEmail={displayEmail}
               smtpConfigured={smtpConfigured}
+              externalSearch={globalSearch}
               onNotify={notify}
             />
           )}
