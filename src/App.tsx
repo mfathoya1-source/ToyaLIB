@@ -21,6 +21,7 @@ import {
   FileBarChart2,
   LayoutDashboard,
   Library,
+  LogIn,
   LogOut,
   Menu,
   Search,
@@ -31,12 +32,18 @@ import {
 import { AdminDashboardView } from './components/AdminDashboardView';
 import { AutomatedReportsView } from './components/AutomatedReportsView';
 import { BookCatalogView } from './components/BookCatalogView';
-import { BookCover } from './components/BookCover';
 import { CollectionManagerView } from './components/CollectionManagerView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoansAndRemindersView } from './components/LoansAndRemindersView';
 import { MemberDashboardView } from './components/MemberDashboardView';
-import { SEED_BOOKS } from './data/seedCatalog';
+import {
+  GUEST_ACTIVITIES,
+  GUEST_BOOKS,
+  GUEST_LOANS,
+  GUEST_MEMBERS,
+  GUEST_NOTIFICATIONS,
+  GUEST_REPORTS,
+} from './data/guestPreviewData';
 import {
   auth,
   BOOTSTRAP_ADMIN_EMAIL,
@@ -93,7 +100,7 @@ function PustakaNusaApp() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [landingSearch, setLandingSearch] = useState('');
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -183,6 +190,7 @@ function PustakaNusaApp() {
     return () => unsub();
   }, []);
 
+  const isGuest = !user;
   const isActualAdmin = useMemo(() => {
     if (!user) return false;
     const isBootstrap =
@@ -191,7 +199,8 @@ function PustakaNusaApp() {
     return isBootstrap || userPublic?.role === 'admin';
   }, [user, userPublic]);
 
-  const effectiveAdminView = isActualAdmin && portalMode === 'admin';
+  const canSwitchPortal = isGuest || isActualAdmin;
+  const effectiveAdminView = canSwitchPortal && portalMode === 'admin';
 
   // Live Firestore subscriptions
   useEffect(() => {
@@ -418,10 +427,25 @@ function PustakaNusaApp() {
     return notifications.filter((n) => n.recipientId === user.uid);
   }, [notifications, user]);
 
+  const activeBooks = user ? books : GUEST_BOOKS;
+  const activeLoans = user ? loans : GUEST_LOANS;
+  const activeActivities = user ? activities : GUEST_ACTIVITIES;
+  const activeNotifications = user ? notifications : GUEST_NOTIFICATIONS;
+  const activeMembers = user ? members : GUEST_MEMBERS;
+  const activeReports = user ? reports : GUEST_REPORTS;
+
+  const activeUserLoans = user
+    ? userLoans
+    : GUEST_LOANS.filter((l) => l.memberId === 'guest_preview_user');
+
+  const activeUserNotifications = user
+    ? userNotifications
+    : GUEST_NOTIFICATIONS.filter((n) => n.recipientId === 'guest_preview_user');
+
   const globalMatches = useMemo(() => {
     const q = globalSearch.trim().toLowerCase();
     if (!q) return { books: [] as Book[], loans: [] as Loan[] };
-    const matchedBooks = books
+    const matchedBooks = activeBooks
       .filter(
         (b) =>
           b.title.toLowerCase().includes(q) ||
@@ -430,7 +454,7 @@ function PustakaNusaApp() {
           b.category.toLowerCase().includes(q)
       )
       .slice(0, 4);
-    const scopedLoans = effectiveAdminView ? loans : userLoans;
+    const scopedLoans = effectiveAdminView ? activeLoans : activeUserLoans;
     const matchedLoans = scopedLoans
       .filter(
         (l) =>
@@ -440,12 +464,14 @@ function PustakaNusaApp() {
       )
       .slice(0, 3);
     return { books: matchedBooks, loans: matchedLoans };
-  }, [globalSearch, books, loans, userLoans, effectiveAdminView]);
+  }, [globalSearch, activeBooks, activeLoans, activeUserLoans, effectiveAdminView]);
 
   async function handleSignIn() {
     setSigningIn(true);
     try {
       await signInWithPopup(auth, googleProvider);
+      setLoginModalOpen(false);
+      notify('Berhasil masuk dengan akun Google.', 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal masuk dengan Google.';
       notify(msg, 'error');
@@ -456,6 +482,9 @@ function PustakaNusaApp() {
 
   async function handleSignOut() {
     await signOut(auth);
+    setPortalMode('admin');
+    setActiveTab('dashboard');
+    notify('Anda telah keluar dari akun.', 'success');
   }
 
   if (!authReady) {
@@ -466,179 +495,7 @@ function PustakaNusaApp() {
     );
   }
 
-  // Unauthenticated Landing Gate
-  if (!user) {
-    const qLanding = landingSearch.trim().toLowerCase();
-    const previewCovers = (
-      qLanding
-        ? SEED_BOOKS.filter(
-            (b) =>
-              b.title.toLowerCase().includes(qLanding) ||
-              b.author.toLowerCase().includes(qLanding) ||
-              b.category.toLowerCase().includes(qLanding) ||
-              b.isbn.toLowerCase().includes(qLanding)
-          )
-        : SEED_BOOKS
-    ).slice(0, 4);
-
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <header className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-8">
-            <a
-              href="#top"
-              className="text-lg font-display font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
-            >
-              PustakaNusa
-            </a>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-              <a
-                href="#fitur"
-                className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-              >
-                Fitur Utama
-              </a>
-              <a
-                href="#koleksi"
-                className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-              >
-                Koleksi Kurasi
-              </a>
-              <a
-                href="#notifikasi"
-                className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-              >
-                Pengingat Email
-              </a>
-            </nav>
-            <button
-              type="button"
-              disabled={signingIn}
-              onClick={handleSignIn}
-              className="px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors whitespace-nowrap shrink-0"
-            >
-              {signingIn ? 'Menghubungkan...' : 'Masuk dengan Google'}
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 lg:py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
-            <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
-              <p className="text-xs font-medium text-blue-700">
-                Sistem Perpustakaan Digital & Sirkulasi Real-Time
-              </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-slate-900 tracking-tight leading-[1.15] text-balance">
-                Kelola Koleksi, Peminjaman Online, dan Pengingat Jatuh Tempo Secara Real-Time
-              </h1>
-              <p className="text-base text-slate-600 leading-relaxed max-w-xl">
-                Platform terpadu bagi administrator dan anggota perpustakaan untuk memantau
-                statistik peminjaman, menerbitkan laporan sirkulasi otomatis, serta mengirim
-                notifikasi email pengingat tenggat secara langsung.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  type="button"
-                  disabled={signingIn}
-                  onClick={handleSignIn}
-                  className="px-6 py-3 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
-                >
-                  {signingIn ? 'Menghubungkan Akun...' : 'Masuk ke Portal Perpustakaan'}
-                </button>
-                <span className="text-xs text-slate-500">
-                  Akses otomatis Portal Member & Admin
-                </span>
-              </div>
-
-              <div
-                id="fitur"
-                className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-slate-200"
-              >
-                <div>
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Dashboard Admin & Member
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Sinkronisasi transaksi pinjam-kembali instan dan grafik tren mingguan.
-                  </p>
-                </div>
-                <div id="notifikasi">
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Pengingat Email Real-Time
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Deteksi keterlambatan otomatis dan pengiriman notifikasi email ke peminjam.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div id="koleksi" className="lg:col-span-6 flex flex-col gap-4">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={landingSearch}
-                  onChange={(e) => setLandingSearch(e.target.value)}
-                  placeholder="Cari koleksi buku, penulis, atau kategori..."
-                  className="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-700/20 focus:border-blue-700"
-                />
-                {landingSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setLandingSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                    aria-label="Hapus pencarian"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {previewCovers.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-                  <p className="text-sm font-medium text-slate-900">
-                    Koleksi tidak ditemukan
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Coba kata kunci lain seperti Teknologi, Sastra, Sains, atau Sejarah.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {previewCovers.map((book) => (
-                    <div
-                      key={book.id}
-                      className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col"
-                    >
-                      <BookCover
-                        title={book.title}
-                        author={book.author}
-                        category={book.category}
-                        coverUrl={book.coverUrl}
-                        className="aspect-[3/4] w-full"
-                      />
-                      <div className="p-3">
-                        <p className="text-[11px] text-slate-500">
-                          {book.category} · {book.format}
-                        </p>
-                        <p className="text-xs font-semibold text-slate-900 truncate mt-0.5">
-                          {book.title}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  const navItems: { id: NavTab; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] =
+  const navItems: { id: NavTab; label: string; icon: typeof LayoutDashboard }[] =
     effectiveAdminView
       ? [
           { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
@@ -656,8 +513,13 @@ function PustakaNusaApp() {
   const currentTabTitle =
     navItems.find((n) => n.id === activeTab)?.label || 'Dashboard';
 
-  const displayName = userPublic?.displayName || user.displayName || 'Anggota';
-  const displayEmail = userPrivate?.email || user.email || '';
+  const activeUserId = user?.uid || 'guest_preview_user';
+  const displayName = user
+    ? userPublic?.displayName || user.displayName || 'Anggota'
+    : 'Pengunjung Tamu';
+  const displayEmail = user
+    ? userPrivate?.email || user.email || ''
+    : 'Mode Pratinjau · Belum Login';
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -671,7 +533,7 @@ function PustakaNusaApp() {
             </span>
           </div>
 
-          {isActualAdmin && (
+          {canSwitchPortal && (
             <div className="px-4 pt-4">
               <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg">
                 <button
@@ -750,14 +612,26 @@ function PustakaNusaApp() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar Akun</span>
-          </button>
+          {user ? (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Keluar Akun</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={signingIn}
+              onClick={() => setLoginModalOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Masuk dengan Google</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -783,7 +657,7 @@ function PustakaNusaApp() {
                 </button>
               </div>
 
-              {isActualAdmin && (
+              {canSwitchPortal && (
                 <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg mt-4">
                   <button
                     type="button"
@@ -839,14 +713,29 @@ function PustakaNusaApp() {
               </nav>
             </div>
 
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Keluar Akun</span>
-            </button>
+            {user ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Keluar Akun</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={signingIn}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setLoginModalOpen(true);
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-white bg-blue-700 rounded-lg"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Masuk dengan Google</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -982,13 +871,25 @@ function PustakaNusaApp() {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('catalog')}
-            className="px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap shrink-0"
-          >
-            Pinjam Buku Online
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {isGuest && (
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              >
+                <LogIn className="w-3.5 h-3.5 text-blue-700" />
+                <span>Masuk</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab('catalog')}
+              className="px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap shrink-0"
+            >
+              Pinjam Buku Online
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
@@ -1014,13 +915,15 @@ function PustakaNusaApp() {
 
           {activeTab === 'dashboard' && effectiveAdminView && (
             <AdminDashboardView
-              books={books}
-              loans={loans}
-              activities={activities}
-              notifications={notifications}
-              members={members}
-              actorId={user.uid}
+              books={activeBooks}
+              loans={activeLoans}
+              activities={activeActivities}
+              notifications={activeNotifications}
+              members={activeMembers}
+              actorId={activeUserId}
               actorName={displayName}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNavigate={(tab) => setActiveTab(tab as NavTab)}
               onNotify={notify}
             />
@@ -1028,13 +931,15 @@ function PustakaNusaApp() {
 
           {activeTab === 'dashboard' && !effectiveAdminView && (
             <MemberDashboardView
-              books={books}
-              userLoans={userLoans}
-              activities={activities}
-              userNotifications={userNotifications}
+              books={activeBooks}
+              userLoans={activeUserLoans}
+              activities={activeActivities}
+              userNotifications={activeUserNotifications}
               userPrivate={userPrivate}
-              actorId={user.uid}
+              actorId={activeUserId}
               actorName={displayName}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNavigate={(tab) => setActiveTab(tab as NavTab)}
               onNotify={notify}
             />
@@ -1042,54 +947,124 @@ function PustakaNusaApp() {
 
           {activeTab === 'catalog' && (
             <BookCatalogView
-              books={books}
-              userLoans={userLoans}
-              userId={user.uid}
+              books={activeBooks}
+              userLoans={activeUserLoans}
+              userId={activeUserId}
               userName={displayName}
               userEmail={displayEmail}
               externalSearch={globalSearch}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNotify={notify}
             />
           )}
 
           {activeTab === 'collections' && effectiveAdminView && (
             <CollectionManagerView
-              books={books}
-              actorId={user.uid}
+              books={activeBooks}
+              actorId={activeUserId}
               actorName={displayName}
               externalSearch={globalSearch}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNotify={notify}
             />
           )}
 
           {activeTab === 'loans' && (
             <LoansAndRemindersView
-              loans={effectiveAdminView ? loans : userLoans}
-              books={books}
-              notifications={effectiveAdminView ? notifications : userNotifications}
+              loans={effectiveAdminView ? activeLoans : activeUserLoans}
+              books={activeBooks}
+              notifications={effectiveAdminView ? activeNotifications : activeUserNotifications}
               isAdmin={effectiveAdminView}
-              actorId={user.uid}
+              actorId={activeUserId}
               actorName={displayName}
               actorEmail={displayEmail}
               smtpConfigured={smtpConfigured}
               externalSearch={globalSearch}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNotify={notify}
             />
           )}
 
           {activeTab === 'reports' && effectiveAdminView && (
             <AutomatedReportsView
-              books={books}
-              loans={loans}
-              notifications={notifications}
-              reports={reports}
-              actorId={user.uid}
+              books={activeBooks}
+              loans={activeLoans}
+              notifications={activeNotifications}
+              reports={activeReports}
+              actorId={activeUserId}
               actorName={displayName}
+              isGuest={isGuest}
+              onRequireAuth={() => setLoginModalOpen(true)}
               onNotify={notify}
             />
           )}
         </main>
       </div>
+
+      {loginModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="login-modal-title"
+        >
+          <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Library className="w-4 h-4 text-blue-700" />
+                <h3 id="login-modal-title" className="text-base font-semibold text-slate-900">
+                  Masuk ke PustakaNusa
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md"
+                aria-label="Tutup dialog masuk"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Masuk menggunakan akun Google Anda untuk menyimpan transaksi peminjaman buku
+                secara real-time, mengelola koleksi, dan menerima notifikasi pengingat jatuh tempo
+                melalui email.
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 text-xs text-slate-600 space-y-1">
+                <p className="font-medium text-slate-900">Manfaat Akun Terhubung</p>
+                <p>· Peminjaman buku online & perpanjangan masa pinjam instan</p>
+                <p>· Sinkronisasi real-time antar perangkat via Firestore</p>
+                <p>· Pengingat jatuh tempo otomatis ke alamat Gmail Anda</p>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Lanjut Tanpa Login
+              </button>
+              <button
+                type="button"
+                disabled={signingIn}
+                onClick={handleSignIn}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>{signingIn ? 'Menghubungkan...' : 'Masuk dengan Google'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

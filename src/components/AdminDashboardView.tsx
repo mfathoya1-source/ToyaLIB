@@ -31,6 +31,8 @@ interface AdminDashboardViewProps {
   members: UserPublic[];
   actorId: string;
   actorName: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNavigate: (tab: string) => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
@@ -43,6 +45,8 @@ export function AdminDashboardView({
   members,
   actorId,
   actorName,
+  isGuest = false,
+  onRequireAuth,
   onNavigate,
   onNotify,
 }: AdminDashboardViewProps) {
@@ -69,6 +73,10 @@ export function AdminDashboardView({
   }, [books, loans, members, notifications]);
 
   async function handleQuickReminder(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setSendingId(loan.id);
     try {
       await sendDueReminderEmail({

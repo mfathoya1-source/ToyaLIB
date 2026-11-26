@@ -20,6 +20,8 @@ interface CollectionManagerViewProps {
   actorId: string;
   actorName: string;
   externalSearch?: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -43,6 +45,8 @@ export function CollectionManagerView({
   actorId,
   actorName,
   externalSearch = '',
+  isGuest = false,
+  onRequireAuth,
   onNotify,
 }: CollectionManagerViewProps) {
   const [search, setSearch] = useState(externalSearch);
@@ -98,6 +102,11 @@ export function CollectionManagerView({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (isGuest) {
+      setModalOpen(false);
+      onRequireAuth?.();
+      return;
+    }
     if (!form.title.trim() || !form.author.trim() || !form.isbn.trim()) {
       onNotify('Judul, penulis, dan ISBN wajib diisi.', 'error');
       return;
@@ -122,6 +131,11 @@ export function CollectionManagerView({
   }
 
   async function handleDelete(book: Book) {
+    if (isGuest) {
+      setConfirmDeleteId(null);
+      onRequireAuth?.();
+      return;
+    }
     try {
       await deleteBook(book.id);
       onNotify(`Buku "${book.title}" dihapus dari koleksi.`, 'success');
@@ -133,6 +147,10 @@ export function CollectionManagerView({
   }
 
   async function handleSeed() {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setSeeding(true);
     try {
       const count = await seedInitialLibrary(actorId, actorName);

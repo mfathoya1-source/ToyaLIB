@@ -29,6 +29,8 @@ interface LoansAndRemindersViewProps {
   actorEmail: string;
   smtpConfigured: boolean;
   externalSearch?: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -44,6 +46,8 @@ export function LoansAndRemindersView({
   actorEmail,
   smtpConfigured,
   externalSearch = '',
+  isGuest = false,
+  onRequireAuth,
   onNotify,
 }: LoansAndRemindersViewProps) {
   const [filter, setFilter] = useState<LoanFilter>('semua');
@@ -87,6 +91,10 @@ export function LoansAndRemindersView({
   }, [loans, filter, search]);
 
   async function handleReturn(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setBusyLoanId(loan.id);
     try {
       await returnBook({ loan, actorId, actorName });
@@ -100,6 +108,10 @@ export function LoansAndRemindersView({
   }
 
   async function handleRenew(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setBusyLoanId(loan.id);
     try {
       await renewLoan({ loan, actorId, actorName });
@@ -113,6 +125,10 @@ export function LoansAndRemindersView({
   }
 
   async function handleSendReminder(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setBusyLoanId(loan.id);
     try {
       const res = await sendDueReminderEmail({
@@ -136,6 +152,10 @@ export function LoansAndRemindersView({
   }
 
   async function handleBulkReminder() {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     if (dueSoonOrOverdueLoans.length === 0) {
       onNotify('Tidak ada peminjaman yang mendekati jatuh tempo atau terlambat.', 'error');
       return;
@@ -162,6 +182,10 @@ export function LoansAndRemindersView({
   }
 
   async function handleSimulateOverdue(daysOffset: number) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     const candidate = books.find((b) => b.availableCopies > 0);
     if (!candidate) {
       onNotify('Tidak ada buku dengan stok tersedia untuk simulasi.', 'error');

@@ -21,6 +21,8 @@ interface AutomatedReportsViewProps {
   reports: AutomatedReport[];
   actorId: string;
   actorName: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -31,12 +33,18 @@ export function AutomatedReportsView({
   reports,
   actorId,
   actorName,
+  isGuest = false,
+  onRequireAuth,
   onNotify,
 }: AutomatedReportsViewProps) {
   const [period, setPeriod] = useState<ReportPeriod>('mingguan');
   const [generating, setGenerating] = useState(false);
 
   async function handleGenerateReport() {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setGenerating(true);
     try {
       await generateAutomatedReport({

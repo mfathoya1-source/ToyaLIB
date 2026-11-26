@@ -34,6 +34,8 @@ interface MemberDashboardViewProps {
   userPrivate: UserPrivate | null;
   actorId: string;
   actorName: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNavigate: (tab: string) => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
@@ -46,6 +48,8 @@ export function MemberDashboardView({
   userPrivate,
   actorId,
   actorName,
+  isGuest = false,
+  onRequireAuth,
   onNavigate,
   onNotify,
 }: MemberDashboardViewProps) {
@@ -68,6 +72,10 @@ export function MemberDashboardView({
   }, [userLoans]);
 
   async function handleReturn(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setBusyLoanId(loan.id);
     try {
       await returnBook({ loan, actorId, actorName });
@@ -81,6 +89,10 @@ export function MemberDashboardView({
   }
 
   async function handleRenew(loan: Loan) {
+    if (isGuest) {
+      onRequireAuth?.();
+      return;
+    }
     setBusyLoanId(loan.id);
     try {
       await renewLoan({ loan, actorId, actorName });
@@ -94,7 +106,10 @@ export function MemberDashboardView({
   }
 
   async function handleToggleReminderPref() {
-    if (!userPrivate) return;
+    if (isGuest || !userPrivate) {
+      onRequireAuth?.();
+      return;
+    }
     setTogglingPref(true);
     try {
       const next = !userPrivate.emailRemindersEnabled;

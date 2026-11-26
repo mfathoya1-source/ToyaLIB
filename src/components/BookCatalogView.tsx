@@ -16,6 +16,8 @@ interface BookCatalogViewProps {
   userName: string;
   userEmail: string;
   externalSearch?: string;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
   onNotify: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -26,6 +28,8 @@ export function BookCatalogView({
   userName,
   userEmail,
   externalSearch = '',
+  isGuest = false,
+  onRequireAuth,
   onNotify,
 }: BookCatalogViewProps) {
   const [search, setSearch] = useState(externalSearch);
@@ -73,6 +77,11 @@ export function BookCatalogView({
 
   async function handleBorrowConfirm() {
     if (!selectedBook) return;
+    if (isGuest) {
+      setSelectedBook(null);
+      onRequireAuth?.();
+      return;
+    }
     setSubmitting(true);
     try {
       await borrowBook({
