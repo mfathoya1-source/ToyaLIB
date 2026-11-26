@@ -219,17 +219,17 @@ export function LoansAndRemindersView({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari transaksi, buku, anggota..."
-              className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-700"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-neutral-200 rounded-lg text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:border-emerald-700"
             />
           </div>
 
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg overflow-x-auto">
+          <div className="flex items-center gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg overflow-x-auto">
             {(
               [
                 ['semua', 'Semua'],
@@ -245,8 +245,8 @@ export function LoansAndRemindersView({
                 onClick={() => setFilter(key)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
                   filter === key
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-neutral-950 text-white'
+                    : 'text-emerald-950/75 hover:text-neutral-950'
                 }`}
               >
                 {label}
@@ -261,7 +261,7 @@ export function LoansAndRemindersView({
               type="button"
               disabled={simulating}
               onClick={() => handleSimulateOverdue(1)}
-              className="px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="px-3 py-2 text-xs font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-emerald-50 transition-colors whitespace-nowrap shrink-0"
             >
               Simulasi Jatuh Tempo (+1h)
             </button>
@@ -269,7 +269,7 @@ export function LoansAndRemindersView({
               type="button"
               disabled={simulating}
               onClick={() => handleSimulateOverdue(-2)}
-              className="px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="px-3 py-2 text-xs font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-emerald-50 transition-colors whitespace-nowrap shrink-0"
             >
               Simulasi Terlambat (-2h)
             </button>
@@ -277,9 +277,9 @@ export function LoansAndRemindersView({
               type="button"
               disabled={bulkSending || dueSoonOrOverdueLoans.length === 0}
               onClick={handleBulkReminder}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
             >
-              <BellRing className="w-3.5 h-3.5" />
+              <BellRing className="w-3.5 h-3.5 text-emerald-300" />
               <span>
                 {bulkSending
                   ? 'Mengirim...'
@@ -290,11 +290,11 @@ export function LoansAndRemindersView({
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
+              <tr className="border-b border-neutral-200 bg-emerald-50/50 text-xs font-medium text-neutral-600">
                 <th className="py-3 px-4">Judul Buku</th>
                 <th className="py-3 px-4">Peminjam</th>
                 <th className="py-3 px-4">Tgl Pinjam</th>
@@ -304,10 +304,10 @@ export function LoansAndRemindersView({
                 <th className="py-3 px-4 text-right">Tindakan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-neutral-100 text-sm">
               {filteredLoans.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 px-4 text-center text-slate-500">
+                  <td colSpan={7} className="py-10 px-4 text-center text-neutral-500">
                     Tidak ada transaksi peminjaman pada filter ini.
                   </td>
                 </tr>
@@ -320,23 +320,23 @@ export function LoansAndRemindersView({
                   const isBusy = busyLoanId === loan.id;
 
                   return (
-                    <tr key={loan.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={loan.id} className="hover:bg-emerald-50/40 transition-colors">
                       <td className="py-3 px-4 max-w-xs">
-                        <p className="font-medium text-slate-900 truncate">
+                        <p className="font-medium text-neutral-950 truncate">
                           {loan.bookTitle}
                         </p>
-                        <p className="text-xs text-slate-500 font-mono-num">
+                        <p className="text-xs text-neutral-500 font-mono-num">
                           {loan.bookCategory} · {loan.bookIsbn}
                         </p>
                       </td>
                       <td className="py-3 px-4">
-                        <p className="text-sm text-slate-900">{loan.memberName}</p>
-                        <p className="text-xs text-slate-500">{loan.memberEmail}</p>
+                        <p className="text-sm text-neutral-950">{loan.memberName}</p>
+                        <p className="text-xs text-neutral-500">{loan.memberEmail}</p>
                       </td>
-                      <td className="py-3 px-4 font-mono-num text-xs text-slate-600 whitespace-nowrap">
+                      <td className="py-3 px-4 font-mono-num text-xs text-neutral-600 whitespace-nowrap">
                         {formatDateId(loan.borrowedAt)}
                       </td>
-                      <td className="py-3 px-4 font-mono-num text-xs text-slate-900 whitespace-nowrap">
+                      <td className="py-3 px-4 font-mono-num text-xs text-neutral-950 whitespace-nowrap">
                         {formatDateId(loan.dueDate)}
                       </td>
                       <td className="py-3 px-4 text-xs whitespace-nowrap">
@@ -356,13 +356,13 @@ export function LoansAndRemindersView({
                             {days === 0 ? 'Jatuh tempo hari ini' : `Sisa ${days} hari`}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="inline-flex items-center gap-1.5 font-medium text-neutral-700">
+                            <Clock className="w-3.5 h-3.5 text-neutral-400" />
                             Dipinjam · Sisa {days} hari
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right font-mono-num text-xs text-slate-700">
+                      <td className="py-3 px-4 text-right font-mono-num text-xs text-neutral-700">
                         {loan.reminderSentCount}x
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
@@ -373,9 +373,9 @@ export function LoansAndRemindersView({
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => handleSendReminder(loan)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-700 border border-slate-200 rounded-md hover:bg-blue-50 transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-emerald-950 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 transition-colors"
                               >
-                                <Send className="w-3 h-3" />
+                                <Send className="w-3 h-3 text-emerald-800" />
                                 <span>Ingatkan</span>
                               </button>
                             )}
@@ -384,7 +384,7 @@ export function LoansAndRemindersView({
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => handleRenew(loan)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200 rounded-md hover:bg-emerald-50 transition-colors"
                               >
                                 <RotateCcw className="w-3 h-3" />
                                 <span>+3 Hari</span>
@@ -394,7 +394,7 @@ export function LoansAndRemindersView({
                               type="button"
                               disabled={isBusy}
                               onClick={() => handleReturn(loan)}
-                              className="px-2.5 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors"
+                              className="px-2.5 py-1.5 text-xs font-medium text-white bg-neutral-950 hover:bg-neutral-800 rounded-md transition-colors"
                             >
                               Kembalikan
                             </button>
@@ -410,26 +410,26 @@ export function LoansAndRemindersView({
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">
+            <h3 className="text-base font-semibold text-neutral-950">
               Log Notifikasi Pengingat Email Real-Time
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-neutral-500 mt-0.5">
               {smtpConfigured
                 ? 'Pengiriman email aktif melalui konfigurasi SMTP server.'
                 : 'Mode pratinjau real-time aktif (tambahkan kredensial SMTP di Environment untuk pengiriman inbox eksternal).'}
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-600">
+          <span className="text-xs font-mono-num text-neutral-600">
             {notifications.length} log tercatat
           </span>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-neutral-100">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-neutral-500">
               Belum ada notifikasi pengingat email yang dikirim.
             </div>
           ) : (
@@ -438,14 +438,14 @@ export function LoansAndRemindersView({
               const isExpanded = expandedMailId === id;
 
               return (
-                <div key={id} className="px-5 py-3.5 hover:bg-slate-50/70 transition-colors">
+                <div key={id} className="px-5 py-3.5 hover:bg-emerald-50/40 transition-colors">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                        <Mail className="w-4 h-4 text-blue-700 shrink-0" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-neutral-950">
+                        <Mail className="w-4 h-4 text-emerald-700 shrink-0" />
                         <span className="truncate">{mail.subject}</span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-neutral-500 mt-1">
                         Kepada: {mail.recipientName} ({mail.recipientEmail}) ·{' '}
                         {mail.triggerType === 'auto_realtime'
                           ? 'Otomatis Real-Time'
@@ -454,20 +454,20 @@ export function LoansAndRemindersView({
                       </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs font-mono-num text-slate-500">
+                      <span className="text-xs font-mono-num text-neutral-500">
                         {formatDateTimeId(mail.sentAt)}
                       </span>
                       <button
                         type="button"
                         onClick={() => setExpandedMailId(isExpanded ? null : id)}
-                        className="text-xs font-medium text-blue-700 hover:text-blue-800 whitespace-nowrap"
+                        className="text-xs font-semibold text-emerald-800 hover:text-neutral-950 whitespace-nowrap"
                       >
                         {isExpanded ? 'Tutup Isi' : 'Lihat Isi Email'}
                       </button>
                     </div>
                   </div>
                   {isExpanded && (
-                    <pre className="mt-3 p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
+                    <pre className="mt-3 p-3.5 bg-emerald-50/50 border border-emerald-200/70 rounded-lg text-xs text-neutral-800 whitespace-pre-wrap font-sans leading-relaxed">
                       {mail.bodyPreview}
                     </pre>
                   )}

@@ -35,24 +35,24 @@ export class ErrorBoundary extends React.Component<
       }
 
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-          <div className="max-w-lg w-full bg-white border border-slate-200 rounded-xl p-6">
+        <div className="min-h-screen bg-[#f6faf7] flex items-center justify-center p-6">
+          <div className="max-w-lg w-full bg-white border border-emerald-200/80 rounded-xl p-6">
             <div className="flex items-center gap-3 text-red-700 mb-3">
               <AlertTriangle className="w-5 h-5 shrink-0" />
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-neutral-950">
                 Gangguan Sistem Sirkulasi
               </h2>
             </div>
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            <p className="text-sm text-neutral-600 mb-4 leading-relaxed">
               Permintaan tidak dapat diproses. Detail teknis tercatat di bawah ini:
             </p>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 text-xs font-mono text-slate-700 break-words">
+            <div className="bg-emerald-50/50 border border-emerald-200/70 rounded-lg p-3 mb-5 text-xs font-mono text-neutral-800 break-words">
               {parsedDetail}
             </div>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-neutral-950 hover:bg-neutral-800 rounded-lg transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Muat Ulang Aplikasi</span>

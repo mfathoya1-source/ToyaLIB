@@ -58,7 +58,7 @@ export const GUEST_LOANS: Loan[] = [
     bookCategory: 'Teknologi',
     memberId: 'guest_preview_user',
     memberName: 'Pengunjung Tamu',
-    memberEmail: 'tamu@pustakanusa.id',
+    memberEmail: 'tamu@toyalibrary.id',
     status: 'borrowed',
     borrowedAt: Timestamp.fromMillis(now - 5 * DAY),
     dueDate: Timestamp.fromMillis(now + 1 * DAY),
@@ -108,7 +108,7 @@ export const GUEST_LOANS: Loan[] = [
     bookCategory: 'Sastra',
     memberId: 'guest_preview_user',
     memberName: 'Pengunjung Tamu',
-    memberEmail: 'tamu@pustakanusa.id',
+    memberEmail: 'tamu@toyalibrary.id',
     status: 'returned',
     borrowedAt: Timestamp.fromMillis(now - 12 * DAY),
     dueDate: Timestamp.fromMillis(now - 5 * DAY),
@@ -189,13 +189,13 @@ export const GUEST_NOTIFICATIONS: EmailNotification[] = [
     loanId: 'ln_preview_1',
     recipientId: 'guest_preview_user',
     recipientName: 'Pengunjung Tamu',
-    recipientEmail: 'tamu@pustakanusa.id',
+    recipientEmail: 'tamu@toyalibrary.id',
     bookTitle: 'Geometri & Arsitektur Sistem Terdistribusi',
     dueDate: Timestamp.fromMillis(now + 1 * DAY),
     subject:
-      '[PustakaNusa] Pengingat Jatuh Tempo Peminjaman: Geometri & Arsitektur Sistem Terdistribusi',
+      '[ToyaLibrary] Pengingat Jatuh Tempo Peminjaman: Geometri & Arsitektur Sistem Terdistribusi',
     bodyPreview:
-      'Halo Pengunjung Tamu,\n\nBuku "Geometri & Arsitektur Sistem Terdistribusi" akan jatuh tempo dalam 1 hari. Silakan lakukan pengembalian atau perpanjangan melalui Portal Member PustakaNusa.',
+      'Halo Pengunjung Tamu,\n\nBuku "Geometri & Arsitektur Sistem Terdistribusi" akan jatuh tempo dalam 1 hari. Silakan lakukan pengembalian atau perpanjangan melalui Portal Member ToyaLibrary.',
     deliveryMode: 'simulated',
     status: 'simulated',
     triggerType: 'auto_realtime',
@@ -210,7 +210,7 @@ export const GUEST_NOTIFICATIONS: EmailNotification[] = [
     bookTitle: 'Atlas Kosmologi & Mekanika Benda Langit',
     dueDate: Timestamp.fromMillis(now - 2 * DAY),
     subject:
-      '[PustakaNusa] Pengingat Keterlambatan Pengembalian: Atlas Kosmologi & Mekanika Benda Langit',
+      '[ToyaLibrary] Pengingat Keterlambatan Pengembalian: Atlas Kosmologi & Mekanika Benda Langit',
     bodyPreview:
       'Halo Dimas Pratama,\n\nBuku "Atlas Kosmologi & Mekanika Benda Langit" telah melewati batas pengembalian selama 2 hari. Mohon segera kembalikan buku tersebut ke perpustakaan.',
     deliveryMode: 'simulated',

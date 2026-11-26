@@ -19,6 +19,7 @@ import {
   BookCopy,
   BookOpen,
   FileBarChart2,
+  Home,
   LayoutDashboard,
   Library,
   LogIn,
@@ -34,6 +35,7 @@ import { AutomatedReportsView } from './components/AutomatedReportsView';
 import { BookCatalogView } from './components/BookCatalogView';
 import { CollectionManagerView } from './components/CollectionManagerView';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LandingPage } from './components/LandingPage';
 import { LoansAndRemindersView } from './components/LoansAndRemindersView';
 import { MemberDashboardView } from './components/MemberDashboardView';
 import {
@@ -76,7 +78,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-function PustakaNusaApp() {
+function ToyaLibraryApp() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
@@ -93,6 +95,7 @@ function PustakaNusaApp() {
   const [reports, setReports] = useState<AutomatedReport[]>([]);
   const [booksLoaded, setBooksLoaded] = useState(false);
 
+  const [showWorkspace, setShowWorkspace] = useState(false);
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [portalMode, setPortalMode] = useState<'admin' | 'member'>('admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -373,7 +376,7 @@ function PustakaNusaApp() {
     )
       .then((count) => {
         if (count > 0) {
-          notify(`${count} buku katalog dasar PustakaNusa siap digunakan.`, 'success');
+          notify(`${count} buku katalog dasar ToyaLibrary siap digunakan.`, 'success');
         }
       })
       .catch((err) => {
@@ -471,6 +474,7 @@ function PustakaNusaApp() {
     try {
       await signInWithPopup(auth, googleProvider);
       setLoginModalOpen(false);
+      setShowWorkspace(true);
       notify('Berhasil masuk dengan akun Google.', 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal masuk dengan Google.';
@@ -489,8 +493,8 @@ function PustakaNusaApp() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-sm text-slate-500">Memuat PustakaNusa...</div>
+      <div className="min-h-screen bg-[#f6faf7] flex items-center justify-center">
+        <div className="text-sm text-neutral-600">Memuat ToyaLibrary...</div>
       </div>
     );
   }
@@ -521,21 +525,130 @@ function PustakaNusaApp() {
     ? userPrivate?.email || user.email || ''
     : 'Mode Pratinjau · Belum Login';
 
+  const loginModalElement = loginModalOpen ? (
+    <div
+      className="fixed inset-0 z-50 bg-neutral-950/55 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-modal-title"
+    >
+      <div className="bg-white border border-emerald-200 rounded-xl max-w-md w-full overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+          <div className="flex items-center gap-2">
+            <Library className="w-4 h-4 text-emerald-700" />
+            <h3 id="login-modal-title" className="text-base font-semibold text-neutral-950">
+              Masuk ke ToyaLibrary
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLoginModalOpen(false)}
+            className="p-1.5 text-neutral-400 hover:text-neutral-800 rounded-md"
+            aria-label="Tutup dialog masuk"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-neutral-600 leading-relaxed">
+            Masuk menggunakan akun Google Anda untuk menyimpan transaksi peminjaman buku
+            secara real-time, mengelola koleksi, dan menerima notifikasi pengingat jatuh tempo
+            melalui email.
+          </p>
+
+          <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-lg p-3.5 text-xs text-neutral-700 space-y-1">
+            <p className="font-medium text-neutral-950">Manfaat Akun Terhubung</p>
+            <p>· Peminjaman buku online & perpanjangan masa pinjam instan</p>
+            <p>· Sinkronisasi real-time antar perangkat via Firestore</p>
+            <p>· Pengingat jatuh tempo otomatis ke alamat Gmail Anda</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-emerald-50/40 border-t border-neutral-200 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setLoginModalOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+          >
+            Lanjut Tanpa Login
+          </button>
+          <button
+            type="button"
+            disabled={signingIn}
+            onClick={handleSignIn}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-60 transition-colors"
+          >
+            <LogIn className="w-4 h-4 text-emerald-300" />
+            <span>{signingIn ? 'Menghubungkan...' : 'Masuk dengan Google'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  if (!showWorkspace) {
+    return (
+      <>
+        {toast && (
+          <div
+            role="status"
+            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border text-sm flex items-center gap-3 shadow-sm ${
+              toast.type === 'error'
+                ? 'bg-red-50 border-red-200 text-red-800'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            }`}
+          >
+            <span>{toast.text}</span>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="text-xs font-medium opacity-70 hover:opacity-100"
+            >
+              Tutup
+            </button>
+          </div>
+        )}
+        <LandingPage
+          books={activeBooks}
+          isSignedIn={Boolean(user)}
+          userName={displayName}
+          onEnterWorkspace={(initialTab = 'dashboard', initialSearch = '') => {
+            if (initialSearch) {
+              setGlobalSearch(initialSearch);
+            }
+            setActiveTab(initialTab);
+            setShowWorkspace(true);
+          }}
+          onOpenLogin={() => setLoginModalOpen(true)}
+          onSignOut={handleSignOut}
+        />
+        {loginModalElement}
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-[#f6faf7] flex">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 flex-col justify-between shrink-0 no-print">
+      <aside className="hidden lg:flex w-64 bg-white border-r border-emerald-200/70 flex-col justify-between shrink-0 no-print">
         <div>
-          <div className="px-6 py-5 border-b border-slate-200 flex items-center gap-2.5">
-            <Library className="w-5 h-5 text-blue-700 shrink-0" />
-            <span className="text-lg font-display font-bold tracking-tight text-slate-900 whitespace-nowrap">
-              PustakaNusa
-            </span>
+          <div className="px-6 py-5 border-b border-emerald-200/70">
+            <button
+              type="button"
+              onClick={() => setShowWorkspace(false)}
+              className="flex items-center gap-2.5 text-left hover:opacity-80 transition-opacity"
+            >
+              <Library className="w-5 h-5 text-emerald-700 shrink-0" />
+              <span className="text-lg font-display font-bold tracking-tight text-neutral-950 whitespace-nowrap">
+                ToyaLibrary
+              </span>
+            </button>
           </div>
 
           {canSwitchPortal && (
             <div className="px-4 pt-4">
-              <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg">
+              <div className="grid grid-cols-2 gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg">
                 <button
                   type="button"
                   onClick={() => {
@@ -544,8 +657,8 @@ function PustakaNusaApp() {
                   }}
                   className={`py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                     portalMode === 'admin'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-neutral-950 text-white'
+                      : 'text-emerald-950/75 hover:text-neutral-950'
                   }`}
                 >
                   Portal Admin
@@ -560,8 +673,8 @@ function PustakaNusaApp() {
                   }}
                   className={`py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                     portalMode === 'member'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-neutral-950 text-white'
+                      : 'text-emerald-950/75 hover:text-neutral-950'
                   }`}
                 >
                   Portal Member
@@ -571,6 +684,14 @@ function PustakaNusaApp() {
           )}
 
           <nav className="p-4 space-y-1">
+            <button
+              type="button"
+              onClick={() => setShowWorkspace(false)}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-emerald-50/60 transition-colors whitespace-nowrap"
+            >
+              <Home className="w-4 h-4 shrink-0 text-neutral-400" />
+              <span className="truncate">Beranda Utama</span>
+            </button>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -581,13 +702,13 @@ function PustakaNusaApp() {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-blue-50 text-blue-800'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-emerald-50 text-emerald-950 border border-emerald-200/80'
+                      : 'text-neutral-600 hover:text-neutral-950 hover:bg-emerald-50/40'
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 shrink-0 ${
-                      isActive ? 'text-blue-700' : 'text-slate-400'
+                      isActive ? 'text-emerald-700' : 'text-neutral-400'
                     }`}
                   />
                   <span className="truncate">{item.label}</span>
@@ -597,18 +718,18 @@ function PustakaNusaApp() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-slate-200 space-y-3">
+        <div className="p-4 border-t border-emerald-200/70 space-y-3">
           <div className="flex items-center gap-3">
             {effectiveAdminView ? (
-              <ShieldCheck className="w-8 h-8 text-blue-700 shrink-0" />
+              <ShieldCheck className="w-8 h-8 text-emerald-700 shrink-0" />
             ) : (
-              <UserCircle2 className="w-8 h-8 text-slate-400 shrink-0" />
+              <UserCircle2 className="w-8 h-8 text-neutral-400 shrink-0" />
             )}
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-neutral-950 truncate">
                 {displayName}
               </p>
-              <p className="text-xs text-slate-500 truncate">{displayEmail}</p>
+              <p className="text-xs text-neutral-500 truncate">{displayEmail}</p>
             </div>
           </div>
 
@@ -616,7 +737,7 @@ function PustakaNusaApp() {
             <button
               type="button"
               onClick={handleSignOut}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-neutral-800 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Keluar Akun</span>
@@ -626,9 +747,9 @@ function PustakaNusaApp() {
               type="button"
               disabled={signingIn}
               onClick={() => setLoginModalOpen(true)}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-60 transition-colors"
             >
-              <LogIn className="w-3.5 h-3.5" />
+              <LogIn className="w-3.5 h-3.5 text-emerald-300" />
               <span>Masuk dengan Google</span>
             </button>
           )}
@@ -639,26 +760,33 @@ function PustakaNusaApp() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-slate-900/40"
+            className="fixed inset-0 bg-neutral-950/45"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="relative w-72 max-w-[80vw] bg-white h-full flex flex-col justify-between p-4 z-10">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <span className="text-lg font-display font-bold text-slate-900">
-                  PustakaNusa
-                </span>
+              <div className="flex items-center justify-between pb-4 border-b border-emerald-200/70">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowWorkspace(false);
+                  }}
+                  className="text-lg font-display font-bold text-neutral-950"
+                >
+                  ToyaLibrary
+                </button>
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 text-slate-500"
+                  className="p-1.5 text-neutral-500"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {canSwitchPortal && (
-                <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg mt-4">
+                <div className="grid grid-cols-2 gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg mt-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -666,7 +794,7 @@ function PustakaNusaApp() {
                       setActiveTab('dashboard');
                     }}
                     className={`py-1.5 text-xs font-medium rounded-md ${
-                      portalMode === 'admin' ? 'bg-white text-slate-900' : 'text-slate-600'
+                      portalMode === 'admin' ? 'bg-neutral-950 text-white' : 'text-emerald-950/75'
                     }`}
                   >
                     Portal Admin
@@ -680,7 +808,7 @@ function PustakaNusaApp() {
                       }
                     }}
                     className={`py-1.5 text-xs font-medium rounded-md ${
-                      portalMode === 'member' ? 'bg-white text-slate-900' : 'text-slate-600'
+                      portalMode === 'member' ? 'bg-neutral-950 text-white' : 'text-emerald-950/75'
                     }`}
                   >
                     Portal Member
@@ -689,6 +817,17 @@ function PustakaNusaApp() {
               )}
 
               <nav className="mt-4 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowWorkspace(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-600"
+                >
+                  <Home className="w-4 h-4 shrink-0" />
+                  <span>Beranda Utama</span>
+                </button>
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -701,8 +840,8 @@ function PustakaNusaApp() {
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg ${
                         activeTab === item.id
-                          ? 'bg-blue-50 text-blue-800'
-                          : 'text-slate-600'
+                          ? 'bg-emerald-50 text-emerald-950 border border-emerald-200/80'
+                          : 'text-neutral-600'
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
@@ -717,7 +856,7 @@ function PustakaNusaApp() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg"
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-neutral-800 bg-emerald-50 border border-emerald-200 rounded-lg"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Keluar Akun</span>
@@ -730,9 +869,9 @@ function PustakaNusaApp() {
                   setMobileMenuOpen(false);
                   setLoginModalOpen(true);
                 }}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-white bg-blue-700 rounded-lg"
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-white bg-neutral-950 rounded-lg"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-4 h-4 text-emerald-300" />
                 <span>Masuk dengan Google</span>
               </button>
             )}
@@ -742,29 +881,29 @@ function PustakaNusaApp() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-6 no-print">
+        <header className="bg-white border-b border-emerald-200/70 px-6 py-3.5 flex items-center justify-between gap-6 no-print">
           <div className="flex items-center gap-3 min-w-0 shrink-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg"
+              className="lg:hidden p-2 -ml-2 text-neutral-600 hover:text-neutral-950 rounded-lg"
               aria-label="Buka navigasi"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 text-sm min-w-0">
-              <span className="text-slate-500 hidden sm:inline whitespace-nowrap">
+              <span className="text-emerald-800 font-medium hidden sm:inline whitespace-nowrap">
                 {effectiveAdminView ? 'Administrator' : 'Member'}
               </span>
-              <span className="text-slate-300 hidden sm:inline">/</span>
-              <h1 className="font-display font-semibold text-slate-900 truncate">
+              <span className="text-neutral-300 hidden sm:inline">/</span>
+              <h1 className="font-display font-semibold text-neutral-950 truncate">
                 {currentTabTitle}
               </h1>
             </div>
           </div>
 
           <div ref={searchContainerRef} className="relative flex-1 max-w-md hidden sm:block">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
@@ -781,7 +920,7 @@ function PustakaNusaApp() {
                 }
               }}
               placeholder="Cari buku, penulis, ISBN, atau transaksi... (/)"
-              className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-700/20 focus:border-blue-700 transition-colors"
+              className="w-full pl-10 pr-9 py-2 text-sm bg-[#f6faf7] border border-neutral-200 rounded-lg text-neutral-950 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-700 transition-colors"
             />
             {globalSearch && (
               <button
@@ -790,7 +929,7 @@ function PustakaNusaApp() {
                   setGlobalSearch('');
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-800"
                 aria-label="Hapus pencarian"
               >
                 <X className="w-4 h-4" />
@@ -798,16 +937,16 @@ function PustakaNusaApp() {
             )}
 
             {searchFocused && globalSearch.trim().length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-40 overflow-hidden">
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-emerald-200 rounded-xl shadow-lg z-40 overflow-hidden">
                 {globalMatches.books.length === 0 && globalMatches.loans.length === 0 ? (
-                  <div className="p-4 text-xs text-slate-500 text-center">
+                  <div className="p-4 text-xs text-neutral-500 text-center">
                     Tidak ada hasil untuk "{globalSearch}"
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                  <div className="divide-y divide-neutral-100 max-h-80 overflow-y-auto">
                     {globalMatches.books.length > 0 && (
                       <div className="p-2">
-                        <p className="px-2 py-1 text-[11px] font-medium text-slate-400">
+                        <p className="px-2 py-1 text-[11px] font-medium text-emerald-800">
                           Koleksi Buku
                         </p>
                         {globalMatches.books.map((book) => (
@@ -819,13 +958,13 @@ function PustakaNusaApp() {
                               setActiveTab('catalog');
                               setSearchFocused(false);
                             }}
-                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 flex items-center justify-between gap-3"
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50/60 flex items-center justify-between gap-3"
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-slate-900 truncate">
+                              <p className="text-xs font-medium text-neutral-950 truncate">
                                 {book.title}
                               </p>
-                              <p className="text-[11px] text-slate-500 truncate">
+                              <p className="text-[11px] text-neutral-500 truncate">
                                 {book.author} · {book.category}
                               </p>
                             </div>
@@ -839,7 +978,7 @@ function PustakaNusaApp() {
 
                     {globalMatches.loans.length > 0 && (
                       <div className="p-2">
-                        <p className="px-2 py-1 text-[11px] font-medium text-slate-400">
+                        <p className="px-2 py-1 text-[11px] font-medium text-emerald-800">
                           Transaksi Peminjaman
                         </p>
                         {globalMatches.loans.map((loan) => (
@@ -851,13 +990,13 @@ function PustakaNusaApp() {
                               setActiveTab('loans');
                               setSearchFocused(false);
                             }}
-                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 flex items-center justify-between gap-3"
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50/60 flex items-center justify-between gap-3"
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-slate-900 truncate">
+                              <p className="text-xs font-medium text-neutral-950 truncate">
                                 {loan.bookTitle}
                               </p>
-                              <p className="text-[11px] text-slate-500 truncate">
+                              <p className="text-[11px] text-neutral-500 truncate">
                                 {loan.memberName} · {loan.status === 'returned' ? 'Dikembalikan' : 'Aktif'}
                               </p>
                             </div>
@@ -876,16 +1015,16 @@ function PustakaNusaApp() {
               <button
                 type="button"
                 onClick={() => setLoginModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-emerald-950 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors whitespace-nowrap shrink-0"
               >
-                <LogIn className="w-3.5 h-3.5 text-blue-700" />
+                <LogIn className="w-3.5 h-3.5 text-emerald-800" />
                 <span>Masuk</span>
               </button>
             )}
             <button
               type="button"
               onClick={() => setActiveTab('catalog')}
-              className="px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap shrink-0"
+              className="px-4 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 transition-colors whitespace-nowrap shrink-0"
             >
               Pinjam Buku Online
             </button>
@@ -1004,67 +1143,7 @@ function PustakaNusaApp() {
         </main>
       </div>
 
-      {loginModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="login-modal-title"
-        >
-          <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <Library className="w-4 h-4 text-blue-700" />
-                <h3 id="login-modal-title" className="text-base font-semibold text-slate-900">
-                  Masuk ke PustakaNusa
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setLoginModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md"
-                aria-label="Tutup dialog masuk"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Masuk menggunakan akun Google Anda untuk menyimpan transaksi peminjaman buku
-                secara real-time, mengelola koleksi, dan menerima notifikasi pengingat jatuh tempo
-                melalui email.
-              </p>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 text-xs text-slate-600 space-y-1">
-                <p className="font-medium text-slate-900">Manfaat Akun Terhubung</p>
-                <p>· Peminjaman buku online & perpanjangan masa pinjam instan</p>
-                <p>· Sinkronisasi real-time antar perangkat via Firestore</p>
-                <p>· Pengingat jatuh tempo otomatis ke alamat Gmail Anda</p>
-              </div>
-            </div>
-
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setLoginModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Lanjut Tanpa Login
-              </button>
-              <button
-                type="button"
-                disabled={signingIn}
-                onClick={handleSignIn}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>{signingIn ? 'Menghubungkan...' : 'Masuk dengan Google'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {loginModalElement}
     </div>
   );
 }
@@ -1072,7 +1151,7 @@ function PustakaNusaApp() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <PustakaNusaApp />
+      <ToyaLibraryApp />
     </ErrorBoundary>
   );
 }

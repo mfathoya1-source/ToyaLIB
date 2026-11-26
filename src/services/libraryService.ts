@@ -101,9 +101,9 @@ export async function ensureUserProfile(firebaseUser: User): Promise<{
   const email = sanitizeText(
     firebaseUser.email || '',
     BLUEPRINT_LIMITS.EMAIL_MAX,
-    'anggota@pustakanusa.id'
+    'anggota@toyalibrary.id'
   );
-  const memberCode = `PN-${uid.slice(0, 6).toUpperCase()}`;
+  const memberCode = `TL-${uid.slice(0, 6).toUpperCase()}`;
 
   if (!pubSnap.exists()) {
     try {
@@ -211,7 +211,7 @@ export async function seedInitialLibrary(
       bookId: 'catalog_seed',
       bookTitle: `${created} Judul Koleksi Awal`,
       description: sanitizeText(
-        `${actorName} menginisialisasi ${created} buku katalog dasar PustakaNusa`,
+        `${actorName} menginisialisasi ${created} buku katalog dasar ToyaLibrary`,
         BLUEPRINT_LIMITS.DESCRIPTION_MAX
       ),
       createdAt: serverTimestamp(),
@@ -258,7 +258,7 @@ export async function addBook(
     author: sanitizeText(input.author, BLUEPRINT_LIMITS.AUTHOR_MAX, 'Anonim'),
     isbn: sanitizeText(input.isbn, BLUEPRINT_LIMITS.ISBN_MAX, '000-000-000'),
     category: input.category,
-    publisher: sanitizeText(input.publisher, BLUEPRINT_LIMITS.PUBLISHER_MAX, 'PustakaNusa'),
+    publisher: sanitizeText(input.publisher, BLUEPRINT_LIMITS.PUBLISHER_MAX, 'ToyaLibrary'),
     year: Math.max(1400, Math.min(2100, Math.floor(input.year))),
     synopsis: sanitizeText(input.synopsis, BLUEPRINT_LIMITS.SYNOPSIS_MAX, 'Deskripsi koleksi.'),
     coverUrl: sanitizeText(input.coverUrl, BLUEPRINT_LIMITS.COVER_URL_MAX, ''),
@@ -307,7 +307,7 @@ export async function updateBook(
     author: sanitizeText(input.author, BLUEPRINT_LIMITS.AUTHOR_MAX, 'Anonim'),
     isbn: sanitizeText(input.isbn, BLUEPRINT_LIMITS.ISBN_MAX, '000-000-000'),
     category: input.category,
-    publisher: sanitizeText(input.publisher, BLUEPRINT_LIMITS.PUBLISHER_MAX, 'PustakaNusa'),
+    publisher: sanitizeText(input.publisher, BLUEPRINT_LIMITS.PUBLISHER_MAX, 'ToyaLibrary'),
     year: Math.max(1400, Math.min(2100, Math.floor(input.year))),
     synopsis: sanitizeText(input.synopsis, BLUEPRINT_LIMITS.SYNOPSIS_MAX, 'Deskripsi koleksi.'),
     coverUrl: sanitizeText(input.coverUrl, BLUEPRINT_LIMITS.COVER_URL_MAX, ''),
@@ -645,7 +645,7 @@ export async function sendDueReminderEmail(params: {
   const deliveryMode = payload.deliveryMode || 'simulated';
   const status = payload.status || (response.ok ? 'simulated' : 'failed');
   const subject = sanitizeText(
-    payload.subject || `[PustakaNusa] Pengingat Jatuh Tempo: ${loan.bookTitle}`,
+    payload.subject || `[ToyaLibrary] Pengingat Jatuh Tempo: ${loan.bookTitle}`,
     BLUEPRINT_LIMITS.SUBJECT_MAX
   );
   const bodyPreview = sanitizeText(

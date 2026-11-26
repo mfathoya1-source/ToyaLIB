@@ -51,7 +51,7 @@ async function startServer() {
   app.post('/api/notifications/send-reminder', async (req, res) => {
     const body = (req.body || {}) as ReminderPayload;
     const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : '';
-    const recipientName = typeof body.recipientName === 'string' ? body.recipientName.trim() : 'Anggota PustakaNusa';
+    const recipientName = typeof body.recipientName === 'string' ? body.recipientName.trim() : 'Anggota ToyaLibrary';
     const bookTitle = typeof body.bookTitle === 'string' ? body.bookTitle.trim() : 'Koleksi Buku';
     const dueDateLabel = typeof body.dueDateLabel === 'string' ? body.dueDateLabel.trim() : '-';
     const daysRemaining = typeof body.daysRemaining === 'number' ? body.daysRemaining : 0;
@@ -70,40 +70,40 @@ async function startServer() {
       : `JATUH TEMPO DALAM ${daysRemaining} HARI`;
 
     const subject = isOverdue
-      ? `[PustakaNusa] Pengingat Keterlambatan Pengembalian: ${bookTitle}`
-      : `[PustakaNusa] Pengingat Jatuh Tempo Peminjaman: ${bookTitle}`;
+      ? `[ToyaLibrary] Pengingat Keterlambatan Pengembalian: ${bookTitle}`
+      : `[ToyaLibrary] Pengingat Jatuh Tempo Peminjaman: ${bookTitle}`;
 
     const plainText = [
       `Halo ${recipientName},`,
       '',
-      `Ini adalah notifikasi otomatis real-time dari PustakaNusa terkait peminjaman buku Anda:`,
+      `Ini adalah notifikasi otomatis real-time dari ToyaLibrary terkait peminjaman buku Anda:`,
       `- Judul Buku : ${bookTitle}`,
       `- Batas Kembali : ${dueDateLabel}`,
       `- Status Waktu : ${urgencyLabel}`,
       loanId ? `- ID Transaksi : ${loanId}` : '',
       '',
       isOverdue
-        ? 'Mohon segera melakukan pengembalian buku melalui Portal Member PustakaNusa atau meja sirkulasi untuk menghindari denda keterlambatan.'
-        : 'Silakan kembalikan atau perpanjang masa pinjam melalui Portal Member PustakaNusa sebelum batas waktu berakhir.',
+        ? 'Mohon segera melakukan pengembalian buku melalui Portal Member ToyaLibrary atau meja sirkulasi untuk menghindari denda keterlambatan.'
+        : 'Silakan kembalikan atau perpanjang masa pinjam melalui Portal Member ToyaLibrary sebelum batas waktu berakhir.',
       '',
       'Salam literasi,',
-      'Tim Sirkulasi PustakaNusa',
+      'Tim Sirkulasi ToyaLibrary',
     ]
       .filter(Boolean)
       .join('\n');
 
     const htmlContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 8px;">
-        <p style="font-size: 13px; color: #1d4ed8; font-weight: 600; margin: 0 0 8px;">PustakaNusa · Pengingat Sirkulasi Real-Time</p>
-        <h2 style="font-size: 18px; margin: 0 0 16px;">${escapeHtml(urgencyLabel)}</h2>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; background-color: #ffffff; color: #0a0a0a; border: 1px solid #a7f3d0; border-radius: 8px;">
+        <p style="font-size: 13px; color: #047857; font-weight: 600; margin: 0 0 8px;">ToyaLibrary · Pengingat Sirkulasi Real-Time</p>
+        <h2 style="font-size: 18px; color: #0a0a0a; margin: 0 0 16px;">${escapeHtml(urgencyLabel)}</h2>
         <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Halo <strong>${escapeHtml(recipientName)}</strong>,</p>
         <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Peminjaman buku berikut mendekati atau telah melewati batas pengembalian:</p>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px;">
-          <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Judul Buku</td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${escapeHtml(bookTitle)}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Batas Kembali</td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${escapeHtml(dueDateLabel)}</td></tr>
-          <tr><td style="padding: 8px; color: #64748b;">Status</td><td style="padding: 8px; font-weight: 600; color: ${isOverdue ? '#b91c1c' : '#b45309'};">${escapeHtml(urgencyLabel)}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #525252;">Judul Buku</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #0a0a0a;">${escapeHtml(bookTitle)}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #525252;">Batas Kembali</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #0a0a0a;">${escapeHtml(dueDateLabel)}</td></tr>
+          <tr><td style="padding: 8px; color: #525252;">Status</td><td style="padding: 8px; font-weight: 600; color: ${isOverdue ? '#b91c1c' : '#b45309'};">${escapeHtml(urgencyLabel)}</td></tr>
         </table>
-        <p style="font-size: 13px; color: #475569; line-height: 1.6;">Silakan lakukan pengembalian atau perpanjangan langsung melalui dasbor Member PustakaNusa.</p>
+        <p style="font-size: 13px; color: #404040; line-height: 1.6;">Silakan lakukan pengembalian atau perpanjangan langsung melalui dasbor Member ToyaLibrary.</p>
       </div>
     `;
 
@@ -176,11 +176,11 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`PustakaNusa server running on http://0.0.0.0:${PORT}`);
+    console.log(`ToyaLibrary server running on http://0.0.0.0:${PORT}`);
   });
 }
 
 startServer().catch((err) => {
-  console.error('Failed to start PustakaNusa server:', err);
+  console.error('Failed to start ToyaLibrary server:', err);
   process.exit(1);
 });

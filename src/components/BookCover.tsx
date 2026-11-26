@@ -11,12 +11,12 @@ interface BookCoverProps {
 }
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  Teknologi: 'from-slate-800 via-slate-900 to-blue-950',
-  Sastra: 'from-emerald-900 via-teal-950 to-slate-900',
-  Sains: 'from-indigo-950 via-slate-900 to-slate-950',
-  Sejarah: 'from-stone-800 via-stone-900 to-neutral-950',
-  Bisnis: 'from-slate-700 via-slate-800 to-slate-950',
-  Desain: 'from-zinc-800 via-stone-900 to-neutral-950',
+  Teknologi: 'from-neutral-900 via-neutral-950 to-emerald-950',
+  Sastra: 'from-emerald-900 via-emerald-950 to-neutral-950',
+  Sains: 'from-teal-950 via-neutral-900 to-neutral-950',
+  Sejarah: 'from-stone-800 via-neutral-900 to-neutral-950',
+  Bisnis: 'from-neutral-800 via-neutral-900 to-emerald-950',
+  Desain: 'from-zinc-800 via-neutral-900 to-emerald-950',
 };
 
 export function BookCover({
@@ -30,7 +30,7 @@ export function BookCover({
 
   if (coverUrl && !failed) {
     return (
-      <div className={`relative overflow-hidden bg-slate-100 ${className}`}>
+      <div className={`relative overflow-hidden bg-emerald-50/50 ${className}`}>
         <img
           src={coverUrl}
           alt={`Sampul buku ${title} karya ${author}`}
@@ -42,7 +42,7 @@ export function BookCover({
     );
   }
 
-  const grad = CATEGORY_GRADIENTS[category] || 'from-slate-800 to-slate-950';
+  const grad = CATEGORY_GRADIENTS[category] || 'from-neutral-900 to-emerald-950';
 
   return (
     <div

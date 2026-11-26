@@ -135,10 +135,10 @@ export function MemberDashboardView({
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">
+              <h3 className="text-sm font-semibold text-neutral-950">
                 Pengingat Jatuh Tempo Aktif ({summary.dueSoon.length} buku)
               </h3>
-              <p className="text-xs text-slate-700 mt-0.5">
+              <p className="text-xs text-neutral-700 mt-0.5">
                 {summary.overdue.length > 0
                   ? `${summary.overdue.length} buku telah melewati batas waktu. Segera lakukan pengembalian.`
                   : 'Beberapa buku mendekati batas waktu pengembalian dalam 48 jam ke depan.'}
@@ -148,7 +148,7 @@ export function MemberDashboardView({
           <button
             type="button"
             onClick={() => onNavigate('loans')}
-            className="px-3.5 py-2 text-xs font-medium text-slate-900 bg-white border border-amber-300 rounded-lg hover:bg-amber-100/60 transition-colors whitespace-nowrap shrink-0"
+            className="px-3.5 py-2 text-xs font-medium text-neutral-950 bg-white border border-amber-300 rounded-lg hover:bg-amber-100/60 transition-colors whitespace-nowrap shrink-0"
           >
             Tinjau Pinjaman
           </button>
@@ -156,102 +156,102 @@ export function MemberDashboardView({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-5">
+          <div className="flex items-center justify-between text-xs font-medium text-emerald-900/80">
             <span>Sedang Dipinjam</span>
-            <BookOpen className="w-4 h-4 text-blue-700" />
+            <BookOpen className="w-4 h-4 text-emerald-800" />
           </div>
-          <p className="text-2xl font-semibold text-slate-900 font-mono-num mt-2">
+          <p className="text-2xl font-semibold text-neutral-950 font-mono-num mt-2">
             {summary.active.length}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-emerald-900/75 mt-1">
             Buku aktif di akun Anda
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+        <div className="bg-white border border-neutral-200 rounded-xl p-5">
+          <div className="flex items-center justify-between text-xs font-medium text-neutral-500">
             <span>Segera Jatuh Tempo</span>
             <Clock className="w-4 h-4 text-amber-600" />
           </div>
-          <p className="text-2xl font-semibold text-slate-900 font-mono-num mt-2">
+          <p className="text-2xl font-semibold text-neutral-950 font-mono-num mt-2">
             {summary.dueSoon.length}
           </p>
-          <p className="text-xs text-slate-500 mt-1 font-mono-num">
+          <p className="text-xs text-neutral-500 mt-1 font-mono-num">
             {summary.overdue.length} terlambat
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+        <div className="bg-white border border-neutral-200 rounded-xl p-5">
+          <div className="flex items-center justify-between text-xs font-medium text-neutral-500">
             <span>Selesai Dikembalikan</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
-          <p className="text-2xl font-semibold text-slate-900 font-mono-num mt-2">
+          <p className="text-2xl font-semibold text-neutral-950 font-mono-num mt-2">
             {summary.returned.length}
           </p>
-          <p className="text-xs text-slate-500 mt-1 font-mono-num">
+          <p className="text-xs text-neutral-500 mt-1 font-mono-num">
             Total {summary.total} transaksi
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+        <div className="bg-white border border-neutral-200 rounded-xl p-5">
+          <div className="flex items-center justify-between text-xs font-medium text-neutral-500">
             <span>Notifikasi Email</span>
-            <Bell className="w-4 h-4 text-slate-400" />
+            <Bell className="w-4 h-4 text-emerald-700" />
           </div>
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-sm font-semibold text-neutral-950">
               {userPrivate?.emailRemindersEnabled ? 'Aktif Real-Time' : 'Nonaktif'}
             </span>
             <button
               type="button"
               disabled={togglingPref || !userPrivate}
               onClick={handleToggleReminderPref}
-              className="px-2.5 py-1 text-xs font-medium text-blue-700 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+              className="px-2.5 py-1 text-xs font-medium text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 transition-colors"
             >
               {userPrivate?.emailRemindersEnabled ? 'Matikan' : 'Aktifkan'}
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-1 truncate">
+          <p className="text-xs text-neutral-500 mt-1 truncate">
             {userPrivate?.email || '—'}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="lg:col-span-7 bg-white border border-neutral-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">
+              <h3 className="text-base font-semibold text-neutral-950">
                 Pinjaman Aktif Anda
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-neutral-500 mt-0.5">
                 Pantau tenggat waktu, perpanjang masa pinjam, atau kembalikan buku secara instan
               </p>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('catalog')}
-              className="text-xs font-medium text-blue-700 hover:text-blue-800 whitespace-nowrap"
+              className="text-xs font-semibold text-emerald-800 hover:text-neutral-950 whitespace-nowrap transition-colors"
             >
               Jelajahi Katalog
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-neutral-100">
             {summary.active.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-neutral-950">
                   Belum ada buku yang sedang dipinjam
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-neutral-500 mt-1">
                   Pilih buku dari katalog online untuk memulai peminjaman digital atau cetak.
                 </p>
                 <button
                   type="button"
                   onClick={() => onNavigate('catalog')}
-                  className="mt-4 px-4 py-2 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
+                  className="mt-4 px-4 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 transition-colors"
                 >
                   Pinjam Buku Sekarang
                 </button>
@@ -269,10 +269,10 @@ export function MemberDashboardView({
                     className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900 truncate">
+                      <h4 className="text-sm font-semibold text-neutral-950 truncate">
                         {loan.bookTitle}
                       </h4>
-                      <p className="text-xs text-slate-500 mt-0.5 font-mono-num">
+                      <p className="text-xs text-neutral-500 mt-0.5 font-mono-num">
                         {loan.bookCategory} · Pinjam {formatDateId(loan.borrowedAt)} · Batas{' '}
                         {formatDateId(loan.dueDate)}
                       </p>
@@ -300,7 +300,7 @@ export function MemberDashboardView({
                           type="button"
                           disabled={isBusy}
                           onClick={() => handleRenew(loan)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200 rounded-lg hover:bg-emerald-50 transition-colors"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>+3 Hari</span>
@@ -310,7 +310,7 @@ export function MemberDashboardView({
                         type="button"
                         disabled={isBusy}
                         onClick={() => handleReturn(loan)}
-                        className="px-3.5 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="px-3.5 py-1.5 text-xs font-medium text-white bg-neutral-950 hover:bg-neutral-800 rounded-lg transition-colors"
                       >
                         Kembalikan
                       </button>
@@ -323,32 +323,32 @@ export function MemberDashboardView({
         </div>
 
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-700" />
-                <h3 className="text-base font-semibold text-slate-900">
+                <Mail className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-base font-semibold text-neutral-950">
                   Kotak Masuk Pengingat Email
                 </h3>
               </div>
-              <span className="text-xs font-mono-num text-slate-500">
+              <span className="text-xs font-mono-num text-neutral-500">
                 {userNotifications.length}
               </span>
             </div>
 
-            <div className="divide-y divide-slate-100 max-h-56 overflow-y-auto">
+            <div className="divide-y divide-neutral-100 max-h-56 overflow-y-auto">
               {userNotifications.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-500">
+                <div className="p-6 text-center text-xs text-neutral-500">
                   Belum ada email pengingat jatuh tempo yang masuk.
                 </div>
               ) : (
                 userNotifications.slice(0, 6).map((mail, idx) => (
                   <div key={mail.id || idx} className="px-5 py-3 text-xs">
-                    <p className="font-medium text-slate-900 truncate">{mail.subject}</p>
-                    <p className="text-slate-500 mt-0.5 line-clamp-2">
+                    <p className="font-medium text-neutral-950 truncate">{mail.subject}</p>
+                    <p className="text-neutral-500 mt-0.5 line-clamp-2">
                       {mail.bodyPreview}
                     </p>
-                    <p className="text-slate-400 font-mono-num mt-1">
+                    <p className="text-neutral-400 font-mono-num mt-1">
                       {formatDateTimeId(mail.sentAt)}
                     </p>
                   </div>
@@ -357,20 +357,20 @@ export function MemberDashboardView({
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ActivityIcon className="w-4 h-4 text-slate-600" />
-                <h3 className="text-base font-semibold text-slate-900">
+                <ActivityIcon className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-base font-semibold text-neutral-950">
                   Aktivitas Perpustakaan Terkini
                 </h3>
               </div>
             </div>
-            <div className="divide-y divide-slate-100 max-h-56 overflow-y-auto">
+            <div className="divide-y divide-neutral-100 max-h-56 overflow-y-auto">
               {activities.slice(0, 6).map((act, idx) => (
                 <div key={act.id || idx} className="px-5 py-3 text-xs">
-                  <p className="text-slate-900">{act.description}</p>
-                  <p className="text-slate-400 font-mono-num mt-0.5">
+                  <p className="text-neutral-900">{act.description}</p>
+                  <p className="text-neutral-400 font-mono-num mt-0.5">
                     {formatDateTimeId(act.createdAt)}
                   </p>
                 </div>
