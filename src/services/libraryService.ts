@@ -730,7 +730,7 @@ export async function generateAutomatedReport(params: {
   for (const loan of loans) {
     categoryCounts[loan.bookCategory] = (categoryCounts[loan.bookCategory] || 0) + 1;
   }
-  let topCategory = 'Teknologi';
+  let topCategory = 'Shonen';
   let maxCat = -1;
   for (const [cat, count] of Object.entries(categoryCounts)) {
     if (count > maxCat) {

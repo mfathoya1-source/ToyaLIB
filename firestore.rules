@@ -85,7 +85,7 @@ service cloud.firestore {
         && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
         && data.author is string && data.author.size() >= 1 && data.author.size() <= 140
         && data.isbn is string && data.isbn.size() >= 5 && data.isbn.size() <= 40
-        && data.category in ['Teknologi', 'Sastra', 'Sains', 'Sejarah', 'Bisnis', 'Desain']
+        && data.category in ['Shonen', 'Seinen', 'Shojo', 'Action', 'Fantasy', 'Slice of Life', 'Teknologi', 'Sastra', 'Sains', 'Sejarah', 'Bisnis', 'Desain']
         && data.publisher is string && data.publisher.size() >= 1 && data.publisher.size() <= 120
         && data.year is int && data.year >= 1400 && data.year <= 2100
         && data.synopsis is string && data.synopsis.size() >= 1 && data.synopsis.size() <= 1200

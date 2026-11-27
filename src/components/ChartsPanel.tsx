@@ -17,7 +17,6 @@ interface ChartsPanelProps {
 }
 
 export function ChartsPanel({ loans, books }: ChartsPanelProps) {
-  // Build 7-day circulation series anchored to today + historical baseline for rich visualization
   const today = new Date();
   const dayBuckets: { label: string; isoDate: string; peminjaman: number; pengembalian: number }[] = [];
 
@@ -53,23 +52,23 @@ export function ChartsPanel({ loans, books }: ChartsPanelProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white border border-neutral-200 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-neutral-950">
-              Tren Sirkulasi 7 Hari Terakhir
+            <h3 className="text-base font-semibold text-[#0c182c]">
+              Tren Peminjaman Manga 7 Hari Terakhir
             </h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Transaksi peminjaman dan pengembalian real-time
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs text-neutral-700">
+          <div className="flex items-center gap-4 text-xs text-slate-700">
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-xs bg-neutral-950" />
+              <span className="w-2.5 h-2.5 rounded-xs bg-[#0c182c]" />
               Pinjam
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" />
+              <span className="w-2.5 h-2.5 rounded-xs bg-[#ff7a00]" />
               Kembali
             </span>
           </div>
@@ -79,41 +78,41 @@ export function ChartsPanel({ loans, books }: ChartsPanelProps) {
             <AreaChart data={dayBuckets} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="pinjamGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#171717" stopOpacity={0.14} />
-                  <stop offset="95%" stopColor="#171717" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#0c182c" stopOpacity={0.18} />
+                  <stop offset="95%" stopColor="#0c182c" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="kembaliGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.28} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#ff7a00" stopOpacity={0.28} />
+                  <stop offset="95%" stopColor="#ff7a00" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 12, fill: '#525252' }}
+                tick={{ fontSize: 12, fill: '#475569' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 12, fill: '#525252' }}
+                tick={{ fontSize: 12, fill: '#475569' }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',
-                  borderColor: '#a7f3d0',
+                  borderColor: '#fdba74',
                   borderRadius: '8px',
                   fontSize: '12px',
-                  color: '#0a0a0a',
+                  color: '#0c182c',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="peminjaman"
                 name="Peminjaman"
-                stroke="#171717"
+                stroke="#0c182c"
                 strokeWidth={2}
                 fill="url(#pinjamGrad)"
               />
@@ -121,7 +120,7 @@ export function ChartsPanel({ loans, books }: ChartsPanelProps) {
                 type="monotone"
                 dataKey="pengembalian"
                 name="Pengembalian"
-                stroke="#059669"
+                stroke="#ff7a00"
                 strokeWidth={2}
                 fill="url(#kembaliGrad)"
               />
@@ -130,49 +129,49 @@ export function ChartsPanel({ loans, books }: ChartsPanelProps) {
         </div>
       </div>
 
-      <div className="bg-white border border-neutral-200 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-neutral-950">
-              Statistik Peminjaman per Kategori
+            <h3 className="text-base font-semibold text-[#0c182c]">
+              Popularitas Genre Manga &amp; Anime
             </h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Akumulasi frekuensi peminjaman berdasarkan bidang keilmuan
+            <p className="text-xs text-slate-500 mt-0.5">
+              Akumulasi frekuensi peminjaman berdasarkan genre manga
             </p>
           </div>
-          <span className="text-xs font-mono-num text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md">
-            {books.length} judul
+          <span className="text-xs font-mono-num text-[#ea580c] bg-orange-50 px-2.5 py-1 rounded-md">
+            {books.length} seri
           </span>
         </div>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis
                 dataKey="kategori"
-                tick={{ fontSize: 12, fill: '#525252' }}
+                tick={{ fontSize: 12, fill: '#475569' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 12, fill: '#525252' }}
+                tick={{ fontSize: 12, fill: '#475569' }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',
-                  borderColor: '#a7f3d0',
+                  borderColor: '#fdba74',
                   borderRadius: '8px',
                   fontSize: '12px',
-                  color: '#0a0a0a',
+                  color: '#0c182c',
                 }}
               />
               <Bar
                 dataKey="dipinjam"
                 name="Total Dipinjam"
-                fill="#10b981"
+                fill="#ff7a00"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={38}
               />

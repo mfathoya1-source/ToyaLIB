@@ -60,7 +60,8 @@ export function BookCatalogView({
       return (
         b.title.toLowerCase().includes(q) ||
         b.author.toLowerCase().includes(q) ||
-        b.isbn.toLowerCase().includes(q)
+        b.isbn.toLowerCase().includes(q) ||
+        b.category.toLowerCase().includes(q)
       );
     });
   }, [books, search, category, availabilityFilter]);
@@ -91,7 +92,7 @@ export function BookCatalogView({
         memberEmail: userEmail,
         durationDays,
       });
-      onNotify(`Berhasil meminjam "${selectedBook.title}" selama ${durationDays} hari.`, 'success');
+      onNotify(`Berhasil meminjam manga "${selectedBook.title}" selama ${durationDays} hari.`, 'success');
       setSelectedBook(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal memproses peminjaman.';
@@ -105,18 +106,18 @@ export function BookCatalogView({
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari judul buku, penulis, atau ISBN..."
-            className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-neutral-200 rounded-lg text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-700"
+            placeholder="Cari judul manga, mangaka, atau ISBN..."
+            className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#ff7a00]/20 focus:border-[#ff7a00]"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg overflow-x-auto">
+          <div className="flex items-center gap-1 p-1 bg-[#0c182c] border border-slate-800 rounded-lg overflow-x-auto">
             {(['Semua', ...BOOK_CATEGORIES] as const).map((cat) => (
               <button
                 key={cat}
@@ -124,8 +125,8 @@ export function BookCatalogView({
                 onClick={() => setCategory(cat)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
                   category === cat
-                    ? 'bg-neutral-950 text-white'
-                    : 'text-emerald-950/75 hover:text-neutral-950'
+                    ? 'bg-[#ff7a00] text-white'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 {cat}
@@ -133,14 +134,14 @@ export function BookCatalogView({
             ))}
           </div>
 
-          <div className="flex items-center gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-lg">
             <button
               type="button"
               onClick={() => setAvailabilityFilter('semua')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
                 availabilityFilter === 'semua'
-                  ? 'bg-neutral-950 text-white'
-                  : 'text-emerald-950/75 hover:text-neutral-950'
+                  ? 'bg-[#0c182c] text-white'
+                  : 'text-slate-600 hover:text-slate-950'
               }`}
             >
               Semua Stok
@@ -150,8 +151,8 @@ export function BookCatalogView({
               onClick={() => setAvailabilityFilter('tersedia')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
                 availabilityFilter === 'tersedia'
-                  ? 'bg-neutral-950 text-white'
-                  : 'text-emerald-950/75 hover:text-neutral-950'
+                  ? 'bg-[#0c182c] text-white'
+                  : 'text-slate-600 hover:text-slate-950'
               }`}
             >
               Tersedia
@@ -161,13 +162,13 @@ export function BookCatalogView({
       </div>
 
       {filteredBooks.length === 0 ? (
-        <div className="bg-white border border-neutral-200 rounded-xl p-12 text-center">
-          <BookOpen className="w-8 h-8 text-emerald-700 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-neutral-950">
-            Koleksi tidak ditemukan
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <BookOpen className="w-8 h-8 text-[#ff7a00] mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-[#0c182c]">
+            Koleksi manga tidak ditemukan
           </h3>
-          <p className="text-sm text-neutral-500 mt-1 max-w-md mx-auto">
-            Tidak ada judul yang sesuai dengan pencarian atau filter kategori saat ini.
+          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+            Tidak ada judul manga yang sesuai dengan pencarian atau filter genre saat ini.
           </p>
           <button
             type="button"
@@ -176,7 +177,7 @@ export function BookCatalogView({
               setCategory('Semua');
               setAvailabilityFilter('semua');
             }}
-            className="mt-4 px-4 py-2 text-sm font-medium text-emerald-900 border border-emerald-200 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors"
+            className="mt-4 px-4 py-2 text-sm font-semibold text-white bg-[#0c182c] hover:bg-[#172b4d] rounded-lg transition-colors"
           >
             Atur Ulang Filter
           </button>
@@ -190,7 +191,7 @@ export function BookCatalogView({
             return (
               <article
                 key={book.id}
-                className="group bg-white border border-neutral-200 rounded-xl overflow-hidden flex flex-col justify-between hover:border-emerald-400 transition-colors"
+                className="group bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between hover:border-[#ff7a00] transition-colors"
               >
                 <div>
                   <BookCover
@@ -198,27 +199,29 @@ export function BookCatalogView({
                     author={book.author}
                     category={book.category}
                     coverUrl={book.coverUrl}
-                    className="aspect-[3/4] w-full border-b border-neutral-100"
+                    className="aspect-[3/4] w-full border-b border-slate-100"
                   />
                   <div className="p-4">
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-800 mb-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#ea580c] mb-1.5">
                       <span>{book.category}</span>
                       <span aria-hidden="true">·</span>
                       <span>{book.format}</span>
                       <span aria-hidden="true">·</span>
                       <span className="font-mono-num">{book.year}</span>
                     </div>
-                    <h3 className="text-base font-semibold text-neutral-950 leading-snug line-clamp-2">
+                    <h3 className="font-display text-lg font-bold uppercase tracking-tight text-[#0c182c] leading-snug line-clamp-2">
                       {book.title}
                     </h3>
-                    <p className="text-sm text-neutral-600 mt-1 truncate">{book.author}</p>
-                    <p className="text-xs text-neutral-500 mt-2 line-clamp-2 leading-relaxed">
+                    <p className="text-xs font-medium text-slate-600 mt-1 truncate">
+                      {book.author}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
                       {book.synopsis}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-4 pb-4 pt-3 border-t border-neutral-100 flex items-center justify-between gap-3">
+                <div className="px-4 pb-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
                   <div className="text-xs">
                     {isAvailable ? (
                       <span className="font-medium text-emerald-700 font-mono-num">
@@ -230,7 +233,7 @@ export function BookCatalogView({
                   </div>
 
                   {alreadyBorrowed ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#ea580c]">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Sedang Dipinjam
                     </span>
@@ -242,9 +245,9 @@ export function BookCatalogView({
                         setSelectedBook(book);
                         setDurationDays(7);
                       }}
-                      className="px-3.5 py-2 text-xs font-medium rounded-lg bg-neutral-950 text-white hover:bg-neutral-800 disabled:bg-neutral-100 disabled:text-neutral-400 transition-colors whitespace-nowrap shrink-0"
+                      className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#ff7a00] text-white hover:bg-[#e56d00] disabled:bg-slate-100 disabled:text-slate-400 transition-colors whitespace-nowrap shrink-0"
                     >
-                      Pinjam Buku
+                      Pinjam Manga
                     </button>
                   )}
                 </div>
@@ -256,20 +259,20 @@ export function BookCatalogView({
 
       {selectedBook && (
         <div
-          className="fixed inset-0 z-50 bg-neutral-950/55 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#08111f]/65 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="borrow-modal-title"
         >
-          <div className="bg-white border border-emerald-200 rounded-xl max-w-lg w-full overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-              <h3 id="borrow-modal-title" className="text-base font-semibold text-neutral-950">
-                Konfirmasi Peminjaman Buku Online
+          <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full overflow-hidden shadow-xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-[#0c182c] text-white">
+              <h3 id="borrow-modal-title" className="text-base font-semibold">
+                Konfirmasi Peminjaman Manga Online
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedBook(null)}
-                className="p-1.5 text-neutral-400 hover:text-neutral-800 rounded-md"
+                className="p-1.5 text-slate-300 hover:text-white rounded-md"
                 aria-label="Tutup dialog"
               >
                 <X className="w-4 h-4" />
@@ -283,24 +286,24 @@ export function BookCatalogView({
                   author={selectedBook.author}
                   category={selectedBook.category}
                   coverUrl={selectedBook.coverUrl}
-                  className="w-20 h-28 rounded-lg shrink-0 border border-neutral-200"
+                  className="w-20 h-28 rounded-lg shrink-0 border border-slate-200"
                 />
                 <div className="min-w-0">
-                  <p className="text-xs text-emerald-800">
+                  <p className="text-xs font-semibold text-[#ea580c]">
                     {selectedBook.category} · {selectedBook.format}
                   </p>
-                  <h4 className="text-base font-semibold text-neutral-950 mt-0.5 leading-snug">
+                  <h4 className="font-display text-lg font-bold uppercase text-[#0c182c] mt-0.5 leading-snug">
                     {selectedBook.title}
                   </h4>
-                  <p className="text-sm text-neutral-600 mt-0.5">{selectedBook.author}</p>
-                  <p className="text-xs font-mono-num text-neutral-500 mt-2">
+                  <p className="text-sm text-slate-600 mt-0.5">{selectedBook.author}</p>
+                  <p className="text-xs font-mono-num text-slate-500 mt-2">
                     ISBN {selectedBook.isbn} · {selectedBook.shelfLocation}
                   </p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-neutral-700 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
                   Durasi Masa Pinjam
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -309,10 +312,10 @@ export function BookCatalogView({
                       key={days}
                       type="button"
                       onClick={() => setDurationDays(days)}
-                      className={`py-2.5 px-3 text-sm font-medium rounded-lg border transition-colors ${
+                      className={`py-2.5 px-3 text-sm font-semibold rounded-lg border transition-colors ${
                         durationDays === days
-                          ? 'border-emerald-700 bg-emerald-50 text-emerald-950'
-                          : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
+                          ? 'border-[#ff7a00] bg-orange-50 text-[#0c182c]'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       {days} Hari
@@ -321,26 +324,26 @@ export function BookCatalogView({
                 </div>
               </div>
 
-              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-lg p-4 space-y-2 text-xs">
-                <div className="flex items-center justify-between text-neutral-600">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-slate-600">
                   <span className="inline-flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-700" />
+                    <Calendar className="w-3.5 h-3.5 text-[#ea580c]" />
                     Batas Pengembalian
                   </span>
-                  <span className="font-semibold text-neutral-950">{duePreviewDate}</span>
+                  <span className="font-semibold text-slate-950">{duePreviewDate}</span>
                 </div>
-                <div className="flex items-center justify-between text-neutral-600">
+                <div className="flex items-center justify-between text-slate-600">
                   <span>Email Pengingat Jatuh Tempo</span>
-                  <span className="font-mono-num text-neutral-900">{userEmail}</span>
+                  <span className="font-mono-num text-slate-900">{userEmail}</span>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-emerald-50/40 border-t border-neutral-200 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setSelectedBook(null)}
-                className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 Batal
               </button>
@@ -348,7 +351,7 @@ export function BookCatalogView({
                 type="button"
                 disabled={submitting}
                 onClick={handleBorrowConfirm}
-                className="px-4 py-2 text-sm font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-60 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#ff7a00] rounded-lg hover:bg-[#e56d00] disabled:opacity-60 transition-colors"
               >
                 {submitting ? 'Memproses...' : 'Konfirmasi Peminjaman'}
               </button>

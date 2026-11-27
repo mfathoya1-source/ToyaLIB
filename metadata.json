@@ -1,6 +1,6 @@
 {
   "name": "ToyaLibrary",
-  "description": "Aplikasi perpustakaan digital berbasis web dengan peminjaman buku online, manajemen koleksi, pelaporan otomatis, dashboard real-time admin dan member, serta pengingat jatuh tempo email.",
+  "description": "Perpustakaan digital koleksi manga Jepang dengan layanan peminjaman online, manajemen koleksi, pelaporan otomatis, dashboard real-time admin dan member, serta pengingat jatuh tempo email.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

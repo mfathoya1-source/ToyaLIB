@@ -93,17 +93,17 @@ async function startServer() {
       .join('\n');
 
     const htmlContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; background-color: #ffffff; color: #0a0a0a; border: 1px solid #a7f3d0; border-radius: 8px;">
-        <p style="font-size: 13px; color: #047857; font-weight: 600; margin: 0 0 8px;">ToyaLibrary · Pengingat Sirkulasi Real-Time</p>
-        <h2 style="font-size: 18px; color: #0a0a0a; margin: 0 0 16px;">${escapeHtml(urgencyLabel)}</h2>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; background-color: #ffffff; color: #0c182c; border: 1px solid #fed7aa; border-radius: 10px;">
+        <p style="font-size: 13px; color: #ea580c; font-weight: 700; margin: 0 0 8px;">ToyaLibrary · Pengingat Peminjaman Manga Jepang</p>
+        <h2 style="font-size: 18px; color: #0c182c; margin: 0 0 16px;">${escapeHtml(urgencyLabel)}</h2>
         <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Halo <strong>${escapeHtml(recipientName)}</strong>,</p>
-        <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Peminjaman buku berikut mendekati atau telah melewati batas pengembalian:</p>
+        <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Peminjaman manga Jepang berikut mendekati atau telah melewati batas pengembalian:</p>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px;">
-          <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #525252;">Judul Buku</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #0a0a0a;">${escapeHtml(bookTitle)}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #525252;">Batas Kembali</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #0a0a0a;">${escapeHtml(dueDateLabel)}</td></tr>
-          <tr><td style="padding: 8px; color: #525252;">Status</td><td style="padding: 8px; font-weight: 600; color: ${isOverdue ? '#b91c1c' : '#b45309'};">${escapeHtml(urgencyLabel)}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Judul Manga</td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0c182c;">${escapeHtml(bookTitle)}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Batas Kembali</td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #0c182c;">${escapeHtml(dueDateLabel)}</td></tr>
+          <tr><td style="padding: 8px; color: #64748b;">Status</td><td style="padding: 8px; font-weight: 600; color: ${isOverdue ? '#b91c1c' : '#ea580c'};">${escapeHtml(urgencyLabel)}</td></tr>
         </table>
-        <p style="font-size: 13px; color: #404040; line-height: 1.6;">Silakan lakukan pengembalian atau perpanjangan langsung melalui dasbor Member ToyaLibrary.</p>
+        <p style="font-size: 13px; color: #475569; line-height: 1.6;">Silakan lakukan pengembalian atau perpanjangan langsung melalui Portal Member ToyaLibrary.</p>
       </div>
     `;
 

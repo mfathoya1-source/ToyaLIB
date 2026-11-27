@@ -3,12 +3,12 @@ import type { Timestamp } from 'firebase/firestore';
 export type UserRole = 'admin' | 'member';
 
 export type BookCategory =
-  | 'Teknologi'
-  | 'Sastra'
-  | 'Sains'
-  | 'Sejarah'
-  | 'Bisnis'
-  | 'Desain';
+  | 'Shonen'
+  | 'Seinen'
+  | 'Shojo'
+  | 'Action'
+  | 'Fantasy'
+  | 'Slice of Life';
 
 export type BookFormat = 'Cetak & Digital' | 'E-Book' | 'Cetak';
 
@@ -26,12 +26,12 @@ export type ActivityType =
 export type ReportPeriod = 'harian' | 'mingguan' | 'bulanan' | 'keterlambatan';
 
 export const BOOK_CATEGORIES: BookCategory[] = [
-  'Teknologi',
-  'Sastra',
-  'Sains',
-  'Sejarah',
-  'Bisnis',
-  'Desain',
+  'Shonen',
+  'Action',
+  'Fantasy',
+  'Seinen',
+  'Slice of Life',
+  'Shojo',
 ];
 
 export const BOOK_FORMATS: BookFormat[] = ['Cetak & Digital', 'E-Book', 'Cetak'];

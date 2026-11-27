@@ -114,7 +114,20 @@
         },
         "category": {
           "type": "string",
-          "enum": ["Teknologi", "Sastra", "Sains", "Sejarah", "Bisnis", "Desain"]
+          "enum": [
+            "Shonen",
+            "Seinen",
+            "Shojo",
+            "Action",
+            "Fantasy",
+            "Slice of Life",
+            "Teknologi",
+            "Sastra",
+            "Sains",
+            "Sejarah",
+            "Bisnis",
+            "Desain"
+          ]
         },
         "publisher": {
           "type": "string",

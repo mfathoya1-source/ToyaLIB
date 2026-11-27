@@ -211,7 +211,6 @@ function ToyaLibraryApp() {
 
     const unsubs: (() => void)[] = [];
 
-    // 1. User own profile live sync
     unsubs.push(
       onSnapshot(
         doc(db, 'usersPublic', user.uid),
@@ -232,7 +231,6 @@ function ToyaLibraryApp() {
       )
     );
 
-    // 2. Books catalog
     unsubs.push(
       onSnapshot(
         query(collection(db, 'books'), orderBy('title', 'asc')),
@@ -245,7 +243,6 @@ function ToyaLibraryApp() {
       )
     );
 
-    // 3. Real-time activities
     unsubs.push(
       onSnapshot(
         query(collection(db, 'activities'), orderBy('createdAt', 'desc'), limit(40)),
@@ -260,7 +257,6 @@ function ToyaLibraryApp() {
       )
     );
 
-    // 4. Loans (Admin sees all; Member sees own loans sorted in memory to avoid composite index)
     if (isActualAdmin) {
       unsubs.push(
         onSnapshot(
@@ -356,14 +352,14 @@ function ToyaLibraryApp() {
     };
   }, [authReady, user, profileReady, isActualAdmin]);
 
-  // Seed initial catalog automatically once when Admin sees empty catalog
+  // Seed Japanese manga catalog automatically once when Admin has no manga_* entries yet
   useEffect(() => {
     if (
       !authReady ||
       !user ||
       !isActualAdmin ||
       !booksLoaded ||
-      books.length > 0 ||
+      books.some((b) => b.id.startsWith('manga_')) ||
       autoSeedAttemptedRef.current
     ) {
       return;
@@ -376,13 +372,13 @@ function ToyaLibraryApp() {
     )
       .then((count) => {
         if (count > 0) {
-          notify(`${count} buku katalog dasar ToyaLibrary siap digunakan.`, 'success');
+          notify(`${count} koleksi manga Jepang ToyaLibrary siap dipinjam.`, 'success');
         }
       })
       .catch((err) => {
         console.error('Auto-seed error:', err);
       });
-  }, [authReady, user, isActualAdmin, booksLoaded, books.length, userPublic]);
+  }, [authReady, user, isActualAdmin, booksLoaded, books, userPublic]);
 
   // Real-time automatic due-date email reminder engine
   useEffect(() => {
@@ -430,7 +426,13 @@ function ToyaLibraryApp() {
     return notifications.filter((n) => n.recipientId === user.uid);
   }, [notifications, user]);
 
-  const activeBooks = user ? books : GUEST_BOOKS;
+  // Prioritize manga collection if database has legacy books, or fallback to guest manga catalog
+  const activeBooks = useMemo(() => {
+    if (!user) return GUEST_BOOKS;
+    const mangaOnly = books.filter((b) => b.id.startsWith('manga_') || !b.id.startsWith('bk_'));
+    return mangaOnly.length > 0 ? mangaOnly : books;
+  }, [user, books]);
+
   const activeLoans = user ? loans : GUEST_LOANS;
   const activeActivities = user ? activities : GUEST_ACTIVITIES;
   const activeNotifications = user ? notifications : GUEST_NOTIFICATIONS;
@@ -474,7 +476,6 @@ function ToyaLibraryApp() {
     try {
       await signInWithPopup(auth, googleProvider);
       setLoginModalOpen(false);
-      setShowWorkspace(true);
       notify('Berhasil masuk dengan akun Google.', 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal masuk dengan Google.';
@@ -493,8 +494,8 @@ function ToyaLibraryApp() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen bg-[#f6faf7] flex items-center justify-center">
-        <div className="text-sm text-neutral-600">Memuat ToyaLibrary...</div>
+      <div className="min-h-screen bg-[#08111f] flex items-center justify-center">
+        <div className="text-sm font-medium text-slate-200">Memuat ToyaLibrary...</div>
       </div>
     );
   }
@@ -503,14 +504,14 @@ function ToyaLibraryApp() {
     effectiveAdminView
       ? [
           { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
-          { id: 'catalog', label: 'Katalog & Pinjam', icon: BookOpen },
+          { id: 'catalog', label: 'Katalog Manga & Pinjam', icon: BookOpen },
           { id: 'collections', label: 'Manajemen Koleksi', icon: BookCopy },
           { id: 'loans', label: 'Sirkulasi & Email', icon: BellRing },
           { id: 'reports', label: 'Laporan Otomatis', icon: FileBarChart2 },
         ]
       : [
           { id: 'dashboard', label: 'Dashboard Member', icon: LayoutDashboard },
-          { id: 'catalog', label: 'Katalog & Pinjam', icon: BookOpen },
+          { id: 'catalog', label: 'Katalog Manga & Pinjam', icon: BookOpen },
           { id: 'loans', label: 'Pinjaman & Email', icon: BellRing },
         ];
 
@@ -527,23 +528,23 @@ function ToyaLibraryApp() {
 
   const loginModalElement = loginModalOpen ? (
     <div
-      className="fixed inset-0 z-50 bg-neutral-950/55 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#08111f]/70 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="login-modal-title"
     >
-      <div className="bg-white border border-emerald-200 rounded-xl max-w-md w-full overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+      <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-[#0c182c] text-white">
           <div className="flex items-center gap-2">
-            <Library className="w-4 h-4 text-emerald-700" />
-            <h3 id="login-modal-title" className="text-base font-semibold text-neutral-950">
+            <Library className="w-4 h-4 text-[#ff7a00]" />
+            <h3 id="login-modal-title" className="text-base font-semibold">
               Masuk ke ToyaLibrary
             </h3>
           </div>
           <button
             type="button"
             onClick={() => setLoginModalOpen(false)}
-            className="p-1.5 text-neutral-400 hover:text-neutral-800 rounded-md"
+            className="p-1.5 text-slate-300 hover:text-white rounded-md"
             aria-label="Tutup dialog masuk"
           >
             <X className="w-4 h-4" />
@@ -551,25 +552,25 @@ function ToyaLibraryApp() {
         </div>
 
         <div className="p-6 space-y-4">
-          <p className="text-sm text-neutral-600 leading-relaxed">
-            Masuk menggunakan akun Google Anda untuk menyimpan transaksi peminjaman buku
-            secara real-time, mengelola koleksi, dan menerima notifikasi pengingat jatuh tempo
-            melalui email.
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Masuk menggunakan akun Google Anda untuk meminjam koleksi manga Jepang secara online,
+            memperpanjang masa pinjam, mengelola katalog, dan menerima notifikasi jatuh tempo via
+            email.
           </p>
 
-          <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-lg p-3.5 text-xs text-neutral-700 space-y-1">
-            <p className="font-medium text-neutral-950">Manfaat Akun Terhubung</p>
-            <p>· Peminjaman buku online & perpanjangan masa pinjam instan</p>
-            <p>· Sinkronisasi real-time antar perangkat via Firestore</p>
+          <div className="bg-orange-50/70 border border-orange-200 rounded-lg p-3.5 text-xs text-slate-700 space-y-1">
+            <p className="font-semibold text-[#0c182c]">Manfaat Akun Terhubung</p>
+            <p>· Peminjaman manga digital &amp; tankōbon cetak secara real-time</p>
+            <p>· Riwayat pinjaman &amp; perpanjangan durasi tersinkronisasi</p>
             <p>· Pengingat jatuh tempo otomatis ke alamat Gmail Anda</p>
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-emerald-50/40 border-t border-neutral-200 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => setLoginModalOpen(false)}
-            className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
           >
             Lanjut Tanpa Login
           </button>
@@ -577,9 +578,9 @@ function ToyaLibraryApp() {
             type="button"
             disabled={signingIn}
             onClick={handleSignIn}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-60 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#ff7a00] rounded-lg hover:bg-[#e56d00] disabled:opacity-60 transition-colors"
           >
-            <LogIn className="w-4 h-4 text-emerald-300" />
+            <LogIn className="w-4 h-4" />
             <span>{signingIn ? 'Menghubungkan...' : 'Masuk dengan Google'}</span>
           </button>
         </div>
@@ -593,17 +594,17 @@ function ToyaLibraryApp() {
         {toast && (
           <div
             role="status"
-            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border text-sm flex items-center gap-3 shadow-sm ${
+            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border text-sm flex items-center gap-3 shadow-lg ${
               toast.type === 'error'
                 ? 'bg-red-50 border-red-200 text-red-800'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                : 'bg-[#0c182c] border-[#ff7a00] text-white'
             }`}
           >
             <span>{toast.text}</span>
             <button
               type="button"
               onClick={() => setToast(null)}
-              className="text-xs font-medium opacity-70 hover:opacity-100"
+              className="text-xs font-medium opacity-75 hover:opacity-100"
             >
               Tutup
             </button>
@@ -611,8 +612,11 @@ function ToyaLibraryApp() {
         )}
         <LandingPage
           books={activeBooks}
+          userLoans={activeUserLoans}
           isSignedIn={Boolean(user)}
+          userId={activeUserId}
           userName={displayName}
+          userEmail={displayEmail}
           onEnterWorkspace={(initialTab = 'dashboard', initialSearch = '') => {
             if (initialSearch) {
               setGlobalSearch(initialSearch);
@@ -622,6 +626,7 @@ function ToyaLibraryApp() {
           }}
           onOpenLogin={() => setLoginModalOpen(true)}
           onSignOut={handleSignOut}
+          onNotify={notify}
         />
         {loginModalElement}
       </>
@@ -629,18 +634,18 @@ function ToyaLibraryApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6faf7] flex">
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-emerald-200/70 flex-col justify-between shrink-0 no-print">
+    <div className="min-h-screen bg-[#f4f7fb] flex">
+      {/* Sidebar Desktop: Midnight Navy Anime Theme */}
+      <aside className="hidden lg:flex w-64 bg-[#0c182c] text-white border-r border-slate-800 flex-col justify-between shrink-0 no-print">
         <div>
-          <div className="px-6 py-5 border-b border-emerald-200/70">
+          <div className="px-6 py-5 border-b border-white/10">
             <button
               type="button"
               onClick={() => setShowWorkspace(false)}
-              className="flex items-center gap-2.5 text-left hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2.5 text-left hover:opacity-85 transition-opacity"
             >
-              <Library className="w-5 h-5 text-emerald-700 shrink-0" />
-              <span className="text-lg font-display font-bold tracking-tight text-neutral-950 whitespace-nowrap">
+              <Library className="w-5 h-5 text-[#ff7a00] shrink-0" />
+              <span className="text-xl font-display font-bold uppercase tracking-wide text-white whitespace-nowrap">
                 ToyaLibrary
               </span>
             </button>
@@ -648,17 +653,17 @@ function ToyaLibraryApp() {
 
           {canSwitchPortal && (
             <div className="px-4 pt-4">
-              <div className="grid grid-cols-2 gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg">
+              <div className="grid grid-cols-2 gap-1 p-1 bg-[#132442] border border-white/10 rounded-lg">
                 <button
                   type="button"
                   onClick={() => {
                     setPortalMode('admin');
                     setActiveTab('dashboard');
                   }}
-                  className={`py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  className={`py-1.5 px-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
                     portalMode === 'admin'
-                      ? 'bg-neutral-950 text-white'
-                      : 'text-emerald-950/75 hover:text-neutral-950'
+                      ? 'bg-[#ff7a00] text-white'
+                      : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Portal Admin
@@ -671,10 +676,10 @@ function ToyaLibraryApp() {
                       setActiveTab('dashboard');
                     }
                   }}
-                  className={`py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  className={`py-1.5 px-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
                     portalMode === 'member'
-                      ? 'bg-neutral-950 text-white'
-                      : 'text-emerald-950/75 hover:text-neutral-950'
+                      ? 'bg-[#ff7a00] text-white'
+                      : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Portal Member
@@ -687,9 +692,9 @@ function ToyaLibraryApp() {
             <button
               type="button"
               onClick={() => setShowWorkspace(false)}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-emerald-50/60 transition-colors whitespace-nowrap"
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap"
             >
-              <Home className="w-4 h-4 shrink-0 text-neutral-400" />
+              <Home className="w-4 h-4 shrink-0 text-slate-400" />
               <span className="truncate">Beranda Utama</span>
             </button>
             {navItems.map((item) => {
@@ -702,13 +707,13 @@ function ToyaLibraryApp() {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-emerald-50 text-emerald-950 border border-emerald-200/80'
-                      : 'text-neutral-600 hover:text-neutral-950 hover:bg-emerald-50/40'
+                      ? 'bg-[#ff7a00] text-white'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 shrink-0 ${
-                      isActive ? 'text-emerald-700' : 'text-neutral-400'
+                      isActive ? 'text-white' : 'text-slate-400'
                     }`}
                   />
                   <span className="truncate">{item.label}</span>
@@ -718,18 +723,18 @@ function ToyaLibraryApp() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-emerald-200/70 space-y-3">
+        <div className="p-4 border-t border-white/10 space-y-3">
           <div className="flex items-center gap-3">
             {effectiveAdminView ? (
-              <ShieldCheck className="w-8 h-8 text-emerald-700 shrink-0" />
+              <ShieldCheck className="w-8 h-8 text-[#ff7a00] shrink-0" />
             ) : (
-              <UserCircle2 className="w-8 h-8 text-neutral-400 shrink-0" />
+              <UserCircle2 className="w-8 h-8 text-slate-400 shrink-0" />
             )}
             <div className="min-w-0">
-              <p className="text-sm font-medium text-neutral-950 truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {displayName}
               </p>
-              <p className="text-xs text-neutral-500 truncate">{displayEmail}</p>
+              <p className="text-xs text-slate-400 truncate">{displayEmail}</p>
             </div>
           </div>
 
@@ -737,7 +742,7 @@ function ToyaLibraryApp() {
             <button
               type="button"
               onClick={handleSignOut}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-neutral-800 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-white/10 border border-white/15 rounded-lg hover:bg-white/15 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Keluar Akun</span>
@@ -747,9 +752,9 @@ function ToyaLibraryApp() {
               type="button"
               disabled={signingIn}
               onClick={() => setLoginModalOpen(true)}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 disabled:opacity-60 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-[#ff7a00] rounded-lg hover:bg-[#e56d00] disabled:opacity-60 transition-colors"
             >
-              <LogIn className="w-3.5 h-3.5 text-emerald-300" />
+              <LogIn className="w-3.5 h-3.5" />
               <span>Masuk dengan Google</span>
             </button>
           )}
@@ -760,41 +765,41 @@ function ToyaLibraryApp() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-neutral-950/45"
+            className="fixed inset-0 bg-[#08111f]/65"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative w-72 max-w-[80vw] bg-white h-full flex flex-col justify-between p-4 z-10">
+          <div className="relative w-72 max-w-[80vw] bg-[#0c182c] text-white h-full flex flex-col justify-between p-4 z-10">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-emerald-200/70">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     setShowWorkspace(false);
                   }}
-                  className="text-lg font-display font-bold text-neutral-950"
+                  className="text-xl font-display font-bold uppercase text-white"
                 >
                   ToyaLibrary
                 </button>
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 text-neutral-500"
+                  className="p-1.5 text-slate-300"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {canSwitchPortal && (
-                <div className="grid grid-cols-2 gap-1 p-1 bg-emerald-50 border border-emerald-200/70 rounded-lg mt-4">
+                <div className="grid grid-cols-2 gap-1 p-1 bg-[#132442] border border-white/10 rounded-lg mt-4">
                   <button
                     type="button"
                     onClick={() => {
                       setPortalMode('admin');
                       setActiveTab('dashboard');
                     }}
-                    className={`py-1.5 text-xs font-medium rounded-md ${
-                      portalMode === 'admin' ? 'bg-neutral-950 text-white' : 'text-emerald-950/75'
+                    className={`py-1.5 text-xs font-semibold rounded-md ${
+                      portalMode === 'admin' ? 'bg-[#ff7a00] text-white' : 'text-slate-300'
                     }`}
                   >
                     Portal Admin
@@ -807,8 +812,8 @@ function ToyaLibraryApp() {
                         setActiveTab('dashboard');
                       }
                     }}
-                    className={`py-1.5 text-xs font-medium rounded-md ${
-                      portalMode === 'member' ? 'bg-neutral-950 text-white' : 'text-emerald-950/75'
+                    className={`py-1.5 text-xs font-semibold rounded-md ${
+                      portalMode === 'member' ? 'bg-[#ff7a00] text-white' : 'text-slate-300'
                     }`}
                   >
                     Portal Member
@@ -823,7 +828,7 @@ function ToyaLibraryApp() {
                     setMobileMenuOpen(false);
                     setShowWorkspace(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-600"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-300"
                 >
                   <Home className="w-4 h-4 shrink-0" />
                   <span>Beranda Utama</span>
@@ -840,8 +845,8 @@ function ToyaLibraryApp() {
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg ${
                         activeTab === item.id
-                          ? 'bg-emerald-50 text-emerald-950 border border-emerald-200/80'
-                          : 'text-neutral-600'
+                          ? 'bg-[#ff7a00] text-white'
+                          : 'text-slate-300'
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
@@ -856,7 +861,7 @@ function ToyaLibraryApp() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-neutral-800 bg-emerald-50 border border-emerald-200 rounded-lg"
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold text-white bg-white/10 border border-white/15 rounded-lg"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Keluar Akun</span>
@@ -869,9 +874,9 @@ function ToyaLibraryApp() {
                   setMobileMenuOpen(false);
                   setLoginModalOpen(true);
                 }}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-white bg-neutral-950 rounded-lg"
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold text-white bg-[#ff7a00] rounded-lg"
               >
-                <LogIn className="w-4 h-4 text-emerald-300" />
+                <LogIn className="w-4 h-4" />
                 <span>Masuk dengan Google</span>
               </button>
             )}
@@ -881,29 +886,29 @@ function ToyaLibraryApp() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-emerald-200/70 px-6 py-3.5 flex items-center justify-between gap-6 no-print">
+        <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-6 no-print">
           <div className="flex items-center gap-3 min-w-0 shrink-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-neutral-600 hover:text-neutral-950 rounded-lg"
+              className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-[#0c182c] rounded-lg"
               aria-label="Buka navigasi"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 text-sm min-w-0">
-              <span className="text-emerald-800 font-medium hidden sm:inline whitespace-nowrap">
+              <span className="text-[#ea580c] font-semibold hidden sm:inline whitespace-nowrap">
                 {effectiveAdminView ? 'Administrator' : 'Member'}
               </span>
-              <span className="text-neutral-300 hidden sm:inline">/</span>
-              <h1 className="font-display font-semibold text-neutral-950 truncate">
+              <span className="text-slate-300 hidden sm:inline">/</span>
+              <h1 className="font-display text-lg font-bold uppercase tracking-tight text-[#0c182c] truncate">
                 {currentTabTitle}
               </h1>
             </div>
           </div>
 
           <div ref={searchContainerRef} className="relative flex-1 max-w-md hidden sm:block">
-            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
@@ -919,8 +924,8 @@ function ToyaLibraryApp() {
                   setSearchFocused(false);
                 }
               }}
-              placeholder="Cari buku, penulis, ISBN, atau transaksi... (/)"
-              className="w-full pl-10 pr-9 py-2 text-sm bg-[#f6faf7] border border-neutral-200 rounded-lg text-neutral-950 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-700 transition-colors"
+              placeholder="Cari manga, mangaka, ISBN, atau transaksi... (/)"
+              className="w-full pl-10 pr-9 py-2 text-sm bg-[#f4f7fb] border border-slate-200 rounded-lg text-slate-950 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff7a00]/20 focus:border-[#ff7a00] transition-colors"
             />
             {globalSearch && (
               <button
@@ -929,7 +934,7 @@ function ToyaLibraryApp() {
                   setGlobalSearch('');
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-800"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800"
                 aria-label="Hapus pencarian"
               >
                 <X className="w-4 h-4" />
@@ -937,17 +942,17 @@ function ToyaLibraryApp() {
             )}
 
             {searchFocused && globalSearch.trim().length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-emerald-200 rounded-xl shadow-lg z-40 overflow-hidden">
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-40 overflow-hidden">
                 {globalMatches.books.length === 0 && globalMatches.loans.length === 0 ? (
-                  <div className="p-4 text-xs text-neutral-500 text-center">
+                  <div className="p-4 text-xs text-slate-500 text-center">
                     Tidak ada hasil untuk "{globalSearch}"
                   </div>
                 ) : (
-                  <div className="divide-y divide-neutral-100 max-h-80 overflow-y-auto">
+                  <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
                     {globalMatches.books.length > 0 && (
                       <div className="p-2">
-                        <p className="px-2 py-1 text-[11px] font-medium text-emerald-800">
-                          Koleksi Buku
+                        <p className="px-2 py-1 text-[11px] font-semibold text-[#ea580c]">
+                          Koleksi Manga Jepang
                         </p>
                         {globalMatches.books.map((book) => (
                           <button
@@ -958,13 +963,13 @@ function ToyaLibraryApp() {
                               setActiveTab('catalog');
                               setSearchFocused(false);
                             }}
-                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50/60 flex items-center justify-between gap-3"
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-orange-50 flex items-center justify-between gap-3"
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-neutral-950 truncate">
+                              <p className="text-xs font-semibold text-[#0c182c] truncate">
                                 {book.title}
                               </p>
-                              <p className="text-[11px] text-neutral-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {book.author} · {book.category}
                               </p>
                             </div>
@@ -978,7 +983,7 @@ function ToyaLibraryApp() {
 
                     {globalMatches.loans.length > 0 && (
                       <div className="p-2">
-                        <p className="px-2 py-1 text-[11px] font-medium text-emerald-800">
+                        <p className="px-2 py-1 text-[11px] font-semibold text-[#ea580c]">
                           Transaksi Peminjaman
                         </p>
                         {globalMatches.loans.map((loan) => (
@@ -990,13 +995,13 @@ function ToyaLibraryApp() {
                               setActiveTab('loans');
                               setSearchFocused(false);
                             }}
-                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50/60 flex items-center justify-between gap-3"
+                            className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-orange-50 flex items-center justify-between gap-3"
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-neutral-950 truncate">
+                              <p className="text-xs font-semibold text-[#0c182c] truncate">
                                 {loan.bookTitle}
                               </p>
-                              <p className="text-[11px] text-neutral-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {loan.memberName} · {loan.status === 'returned' ? 'Dikembalikan' : 'Aktif'}
                               </p>
                             </div>
@@ -1015,18 +1020,18 @@ function ToyaLibraryApp() {
               <button
                 type="button"
                 onClick={() => setLoginModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-emerald-950 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#0c182c] bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors whitespace-nowrap shrink-0"
               >
-                <LogIn className="w-3.5 h-3.5 text-emerald-800" />
+                <LogIn className="w-3.5 h-3.5 text-[#ea580c]" />
                 <span>Masuk</span>
               </button>
             )}
             <button
               type="button"
               onClick={() => setActiveTab('catalog')}
-              className="px-4 py-2 text-xs font-medium text-white bg-neutral-950 rounded-lg hover:bg-neutral-800 transition-colors whitespace-nowrap shrink-0"
+              className="px-4 py-2 text-xs font-semibold text-white bg-[#ff7a00] rounded-lg hover:bg-[#e56d00] transition-colors whitespace-nowrap shrink-0"
             >
-              Pinjam Buku Online
+              Pinjam Manga Online
             </button>
           </div>
         </header>
@@ -1038,14 +1043,14 @@ function ToyaLibraryApp() {
               className={`mb-5 px-4 py-3 rounded-xl border text-sm flex items-center justify-between gap-3 ${
                 toast.type === 'error'
                   ? 'bg-red-50 border-red-200 text-red-800'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-[#0c182c] border-[#ff7a00] text-white'
               }`}
             >
               <span>{toast.text}</span>
               <button
                 type="button"
                 onClick={() => setToast(null)}
-                className="text-xs font-medium opacity-70 hover:opacity-100"
+                className="text-xs font-medium opacity-75 hover:opacity-100"
               >
                 Tutup
               </button>
